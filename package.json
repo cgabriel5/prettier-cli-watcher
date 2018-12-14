@@ -17,7 +17,7 @@
 	"scripts": {
 		"pretty": "prettier-cli-watcher --configpath='/configs/prettier.config.json'"
 	},
-	"devDependencies": {
+	"dependencies": {
 		"chalk": "^2.4.1",
 		"chokidar": "^2.0.4",
 		"cross-spawn-with-kill": "^1.0.0",
