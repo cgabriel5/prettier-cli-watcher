@@ -1,4 +1,4 @@
-# prettier-cli-watch
+# prettier-cli-watcher
 
 ### Overview
 
