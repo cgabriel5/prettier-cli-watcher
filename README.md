@@ -9,9 +9,9 @@ Runs [prettier](https://github.com/prettier/prettier) (from CLI) on project file
 ### Features
 
 -   Runs prettier on file when modified.
-	-   Pressing <kbd>ctrl</kbd> + <kbd>s</kbd> in rapid succession on a file runs prettier only on the last save.
+    -   Pressing <kbd>ctrl</kbd> + <kbd>s</kbd> in rapid succession on a file runs prettier only on the last save.
 -   Sends OS notification and logs location of error when prettier fails to format file.
-	-   Logging/notifications on by default (can be disabled).
+    -   Logging/notifications on by default (can be disabled).
 
 ### Install
 
@@ -48,22 +48,22 @@ yarn run pretty
 Available parameters (_supplied via script command - see examples_):
 
 -   `--dir="."`
-	-   The directory to watch.
-	-   By default watches entire project for file changes.
+    -   The directory to watch.
+    -   By default watches entire project for file changes.
 -   `--configpath="path/to/prettier.config.json"` (`required`)
-	-   The path to your prettier config file.
+    -   The path to your prettier config file.
 -   `--ignoredirs="node_modules|bower_components|.git|dist"`
-	-   The folders to ignore file changes from.
-	-   Folders shown above are the default ignored folders.
-	-   Pass in custom list to override defaults.
+    -   The folders to ignore file changes from.
+    -   Folders shown above are the default ignored folders.
+    -   Pass in custom list to override defaults.
 -   `--extensions="js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql"`
-	-   The file extensions to watch out. _Must also be allowed by prettier_.
-	-   Extensions shown above are the default allowed extensions.
-	-   Pass in custom list to override defaults.
+    -   The file extensions to watch out for. _Must also be allowed by prettier_.
+    -   Extensions shown above are the default allowed extensions.
+    -   Pass in custom list to override defaults.
 -   `--nonotify`
-	-   Provide to disable OS notifications.
+    -   Provide to disable OS notifications.
 -   `--nolog`
-	-   Provide to disable command line output.
+    -   Provide to disable command line output.
 
 ### Examples
 
@@ -71,7 +71,7 @@ Available parameters (_supplied via script command - see examples_):
 ...
 "scripts": {
 	// Default setup:
-	"pretty": "prettier-cli-watcher --dir='.' --configpath='path/to/prettier.config.json' --ignoredirs='node_modules|bower_components|.git|dist' --extensions='js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql'",
+	"pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='.' --ignoredirs='node_modules|bower_components|.git|dist' --extensions='js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql'",
 	// Same as:
 	"pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json'",
 
@@ -80,8 +80,8 @@ Available parameters (_supplied via script command - see examples_):
 	"pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --nonotify",
 
 	// Example 2:
-	// Only watch for ./src file changes that are made to .js files. Notifications and logging is left on.
-	"pretty": "prettier-cli-watcher --dir='./src' --configpath='path/to/prettier.config.json' --extensions='js'",
+	// Only watch for ./src file changes made to .js files. Notifications and logging is left on.
+	"pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='./src' --extensions='js'",
 }
 ...
 ```
@@ -99,18 +99,18 @@ See how to contribute [here](/CONTRIBUTING.md).
 ### Attribution
 
 -   <div>
-			The error notification icon was made by
-			<a href="https://www.flaticon.com/authors/roundicons" title="Roundicons">
-				Roundicons
-			</a>
-			from
-			<a href="https://www.flaticon.com/" title="Flaticon">
-				www.flaticon.com
-			</a>
-			and is licensed under
-			<a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">
-				CC 3.0 BY</a>.
-		</div>
+    		The error notification icon was made by
+    		<a href="https://www.flaticon.com/authors/roundicons" title="Roundicons">
+    			Roundicons
+    		</a>
+    		from
+    		<a href="https://www.flaticon.com/" title="Flaticon">
+    			www.flaticon.com
+    		</a>
+    		and is licensed under
+    		<a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">
+    			CC 3.0 BY</a>.
+    	</div>
 
 ### License
 
