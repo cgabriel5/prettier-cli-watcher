@@ -5,15 +5,12 @@
 const path = require("path");
 const chalk = require("chalk");
 const chokidar = require("chokidar");
-const minimist = require("minimist");
 const notifier = require("node-notifier");
-const escapereg = require("lodash.escaperegexp");
 require("./cleanup.js")();
 
 // Get CLI parameters.
 const params = require("./params.js")();
 const dir = params.dir;
-const configpath = params.configpath;
 const ignoredirs = params.ignoredirs;
 const exts = params.exts;
 const nonotify = params.nonotify;
@@ -45,7 +42,7 @@ var watcher = chokidar.watch(dir, {
 });
 
 // Only react to file modifications.
-watcher.on("change", (filepath, stats) => {
+watcher.on("change", (filepath /*, stats*/) => {
 	// Prefix filepath with ./ if not already.
 	if (!filepath.startsWith("./")) {
 		filepath = `./${filepath}`;
@@ -131,7 +128,7 @@ watcher.on("change", (filepath, stats) => {
 
 		if (errored) {
 			// Get line information.
-			let lineinfo = (response.match(/(?! )\((\d+\:\d+)\)$/m) || [""])[0];
+			let lineinfo = (response.match(/(?! )\((\d+:\d+)\)$/m) || [""])[0];
 
 			// Check if previous error exists.
 			let last_error = lookup.errors[filepath];
