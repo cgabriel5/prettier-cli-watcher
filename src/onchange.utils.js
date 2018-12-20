@@ -5,7 +5,6 @@ const path = require("path");
 const chalk = require("chalk");
 const ext = require("file-extension");
 const spawn = require("cross-spawn-with-kill");
-const tmp_filepath = require("./tp.js");
 
 /**
  * Get file path information (i.e. file name and directory path).
@@ -75,7 +74,7 @@ var is_allowed_file_extension = (
  * @param  {string} filepath - The modified file's path.
  * @return {object} - The spawned child process.
  */
-var child_process = filepath => {
+var child_process = (filepath, tmp_filepath) => {
 	// Run prettier on file.
 	return spawn(
 		"./node_modules/prettier/bin-prettier.js",

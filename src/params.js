@@ -3,12 +3,12 @@
 // Needed modules.
 const fs = require("fs");
 const path = require("path");
+const temp = require("temp");
 const chalk = require("chalk");
 const log = require("fancy-log");
 const fe = require("file-exists");
 const minimist = require("minimist");
 const escapereg = require("lodash.escaperegexp");
-const tmp_filepath = require("./tp.js");
 
 /**
  * Converts a comma/pipe delimited string list into an array. Trims items
@@ -133,8 +133,13 @@ module.exports = function() {
 	let config = require(configpath);
 	// Note: Remove the parser option to let prettier determine the correct parser to use.
 	delete config.parser;
-	// Store settings in a temp file that will be removed when process exits.
-	fs.writeFileSync(tmp_filepath, JSON.stringify(config, null, "\t"));
+
+	// Automatically track and cleanup temp files at exit.
+	temp.track();
+	// Create temporary prettier config file.
+	let { path: tmp_filepath } = temp.openSync({ suffix: ".json" });
+	// Save user's prettier config to temporary file.
+	fs.writeFileSync(tmp_filepath, JSON.stringify(config), "utf8");
 
 	// Get needed chalk methods.
 	const bold = chalk.bold;
@@ -156,6 +161,7 @@ module.exports = function() {
 		ignoredirs,
 		exts,
 		nonotify,
-		nolog
+		nolog,
+		tmp_filepath
 	};
 };

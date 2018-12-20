@@ -6,15 +6,18 @@ const path = require("path");
 const chalk = require("chalk");
 const chokidar = require("chokidar");
 const notifier = require("node-notifier");
-require("./cleanup.js")();
 
 // Get CLI parameters.
-const params = require("./params.js")();
-const dir = params.dir;
-const ignoredirs = params.ignoredirs;
-const exts = params.exts;
-const nonotify = params.nonotify;
-const nolog = params.nolog;
+// const params = require("./params.js")();
+const {
+	dir,
+	configpath,
+	ignoredirs,
+	exts,
+	nonotify,
+	nolog,
+	tmp_filepath
+} = require("./params.js")();
 
 // Get change event utils.
 const {
@@ -80,7 +83,7 @@ watcher.on("change", (filepath /*, stats*/) => {
 	// -→ watcher.unwatch(filepath);
 
 	// Create the child process.
-	const cprocess = child_process(filepath);
+	const cprocess = child_process(filepath, tmp_filepath);
 	// Store process reference.
 	lookup.processes[filepath] = cprocess;
 
