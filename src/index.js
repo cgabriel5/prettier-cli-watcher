@@ -8,7 +8,6 @@ const chokidar = require("chokidar");
 const notifier = require("node-notifier");
 
 // Get CLI parameters.
-// const params = require("./params.js")();
 const {
 	dir,
 	configpath,
