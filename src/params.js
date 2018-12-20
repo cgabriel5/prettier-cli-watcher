@@ -17,7 +17,7 @@ const escapereg = require("lodash.escaperegexp");
  * @param  {string} list - The list to convert to array.
  * @return {array} - The array.
  */
-var toarray = list => {
+let toarray = list => {
 	return list.split(/,|\|/).map(item => {
 		return item.trim();
 	});
@@ -31,7 +31,7 @@ var toarray = list => {
  * @param  {array} array - The array of dirs to ignore.
  * @return {regexpObject} - The RegExp object.
  */
-var dynamicreg = array => {
+let dynamicreg = array => {
 	// Add opening RegExp syntax.
 	let source = ["(("];
 
@@ -60,7 +60,7 @@ var dynamicreg = array => {
  * @param  {string} path - The path to prep.
  * @return {string} - The prepped path.
  */
-var preppath = path => {
+let preppath = path => {
 	// Possible transforms:
 	// ./     → .
 	// /      → .

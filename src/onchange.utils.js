@@ -12,7 +12,7 @@ const spawn = require("cross-spawn-with-kill");
  * @param  {string} filepath - The complete file path.
  * @return {object} - Object containing file path components.
  */
-var fileinfo = filepath => {
+let fileinfo = filepath => {
 	// Get file extension.
 	let extension = ext(filepath);
 	// Get file name and directory path.
@@ -37,7 +37,7 @@ var fileinfo = filepath => {
  * @param  {string} custom_filepath - The custom file path to log.
  * @return {boolean} - Boolean indicating whether extension is allowed.
  */
-var is_allowed_file_extension = (
+let is_allowed_file_extension = (
 	exts,
 	file_extension,
 	nolog,
@@ -74,7 +74,7 @@ var is_allowed_file_extension = (
  * @param  {string} filepath - The modified file's path.
  * @return {object} - The spawned child process.
  */
-var child_process = (filepath, tmp_filepath) => {
+let child_process = (filepath, tmp_filepath) => {
 	// Run prettier on file.
 	return spawn(
 		"./node_modules/prettier/bin-prettier.js",
@@ -104,7 +104,7 @@ var child_process = (filepath, tmp_filepath) => {
  * @param  {string} filepath - The file path of the modified file.
  * @return {undefined} - Nothing is returned.
  */
-var kill_active_process = (lookup, filepath) => {
+let kill_active_process = (lookup, filepath) => {
 	// Look for a running process on the file.
 	let __active_process__ = lookup.processes[filepath];
 

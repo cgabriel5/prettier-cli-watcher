@@ -34,7 +34,7 @@ const lookup = {
 const line_sep = "-".repeat("60");
 
 // Initialize watcher.
-var watcher = chokidar.watch(dir, {
+let watcher = chokidar.watch(dir, {
 	persistent: true,
 	ignoreInitial: true,
 	ignored: filepath => {
