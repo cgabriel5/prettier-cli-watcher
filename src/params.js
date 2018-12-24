@@ -131,15 +131,53 @@ module.exports = function() {
 
 	// Get config file contents.
 	let config = require(configpath);
-	// Note: Remove the parser option to let prettier determine the correct parser to use.
-	delete config.parser;
+	// Store temporary file paths for later access.
+	let tmps = {};
+
+	/**
+	 * Remove parser option. Let prettier determine correct parser.
+	 *
+	 * @param  {object} conf - The default prettier config.
+	 * @return {undefined} - Nothing.
+	 */
+	let remove_parser = conf => {
+		delete conf.parser;
+	};
+
+	// Check if using a per-extension-file configuration file.
+	if (config.hasOwnProperty("*")) {
+		remove_parser(config["*"]);
+
+		// Set flag.
+		tmps.__multi__ = true;
+	} else {
+		// For universal config.
+		remove_parser(config);
+
+		// Normalize config.
+		config = { "*": { ...config } };
+	}
 
 	// Automatically track and cleanup temp files at exit.
 	temp.track();
-	// Create temporary prettier config file.
-	let { path: tmp_filepath } = temp.openSync({ suffix: ".json" });
-	// Save user's prettier config to temporary file.
-	fs.writeFileSync(tmp_filepath, JSON.stringify(config), "utf8");
+
+	// Get all extension configs.
+	let cexts = Object.keys(config);
+	// Create temp files for each extension provided.
+	for (let i = 0, l = cexts.length; i < l; i++) {
+		// Cache current loop item.
+		let cext = cexts[i];
+
+		// Create temporary prettier config file.
+		let { path: tmp_filepath } = temp.openSync({
+			prefix: `${cext}-`,
+			suffix: ".json"
+		});
+		// Store path for later access.
+		tmps[cext] = tmp_filepath;
+		// Save prettier config to temporary file.
+		fs.writeFileSync(tmp_filepath, JSON.stringify(config[cext]), "utf8");
+	}
 
 	// Get needed chalk methods.
 	const bold = chalk.bold;
@@ -162,6 +200,6 @@ module.exports = function() {
 		exts,
 		nonotify,
 		nolog,
-		tmp_filepath
+		tmps
 	};
 };

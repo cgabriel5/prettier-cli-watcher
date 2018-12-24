@@ -15,7 +15,7 @@ const {
 	exts,
 	nonotify,
 	nolog,
-	tmp_filepath
+	tmps
 } = require("./params.js")();
 
 // Get change event utils.
@@ -80,6 +80,22 @@ watcher.on("change", (filepath /*, stats*/) => {
 
 	// Stop listening to file changes while formatting file. [not needed?]
 	// -→ watcher.unwatch(filepath);
+
+	// Get prettier config temp file (check for extension specific config).
+	let tmp_filepath = tmps.hasOwnProperty(file_extension)
+		? tmps[file_extension]
+		: tmps["*"];
+
+	// Get what prettier config was used on the file.
+	let pconfig = `${
+		tmps.__multi__
+			? ` ${
+					tmp_filepath.includes("*-")
+						? "*"
+						: tmp_filepath.match(/(?!\/)[a-z0-9]+(?=-)/)[0]
+			  }`
+			: ""
+	}`;
 
 	// Create the child process.
 	const cprocess = child_process(filepath, tmp_filepath);
@@ -164,6 +180,7 @@ watcher.on("change", (filepath /*, stats*/) => {
 						lineinfo.replace(/\(|\)/g, "")
 					)} —`
 				)
+				.replace(/error/, `error${chalk.black(pconfig)}`)
 				// Remove original line information.
 				.replace(lineinfo, "")}`;
 
@@ -185,7 +202,7 @@ watcher.on("change", (filepath /*, stats*/) => {
 			// Create success message.
 			message = `[${chalk.cyan(
 				"prettied"
-			)}] 😎 ${custom_filepath} ${duration}`;
+			)}${pconfig}] 😎 ${custom_filepath} ${duration}`;
 		}
 
 		// Log success/error message.
