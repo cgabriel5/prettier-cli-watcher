@@ -33,7 +33,7 @@ yarn add prettier-cli-watcher --dev
 // actual path to your prettier config file.
 ...
 "scripts": {
-    "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json'"
+  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json'"
 }
 ...
 ```
@@ -73,18 +73,18 @@ Available parameters (_supplied via script command - see examples_):
 ```json5
 ...
 "scripts": {
-    // Default setup...
-    "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='.' --ignoredirs='node_modules|bower_components|.git|dist' --extensions='js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql'",
-    // ...is the same as:
-    "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json'",
+  // Default setup...
+  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='.' --ignoredirs='node_modules|bower_components|.git|dist' --extensions='js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql'",
+  // ...is the same as:
+  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json'",
 
-    // Example 1:
-    // Disable OS notifications while keeping --dir, --ignoredirs, and --extensions defaults.
-    "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --nonotify",
+  // Example 1:
+  // Disable OS notifications while keeping --dir, --ignoredirs, and --extensions defaults.
+  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --nonotify",
 
-    // Example 2:
-    // Only watch for ./src file changes made to .js files. Notifications and logging is left on.
-    "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='./src' --extensions='js'"
+  // Example 2:
+  // Only watch for ./src file changes made to .js files. Notifications and logging is left on.
+  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='./src' --extensions='js'"
 }
 ...
 ```
