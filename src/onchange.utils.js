@@ -72,6 +72,7 @@ let is_allowed_file_extension = (
  * Create the prettier process on file.
  *
  * @param  {string} filepath - The modified file's path.
+ * @param  {string} tmp_filepath - Temporary file path of the prettier config.
  * @return {object} - The spawned child process.
  */
 let child_process = (filepath, tmp_filepath) => {
