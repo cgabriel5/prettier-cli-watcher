@@ -1,6 +1,7 @@
 "use strict";
 
 // Needed modules.
+const os = require("os");
 const path = require("path");
 const chalk = require("chalk");
 const ext = require("file-extension");
@@ -76,6 +77,25 @@ let is_allowed_file_extension = (
  * @return {object} - The spawned child process.
  */
 let child_process = (filepath, tmp_filepath) => {
+	// Child spawn options.
+	// [https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options]
+	let options = {
+		stdio: "pipe"
+	};
+
+	// For Linux only force terminal output to maintain colors. Adding this
+	// to macOS for example causes it to choke and not run. To be specific,
+	// I get this error on macOS when the env option is supplied:
+	// "env: node: No such file or directory".
+	// [https://nodejs.org/api/os.html#os_os_platform]
+	if (os.platform() === "linux") {
+		options.env = {
+			// Preserve terminal colors:
+			// [https://stackoverflow.com/a/43375301]
+			FORCE_COLOR: true
+		};
+	}
+
 	// Run prettier on file.
 	return spawn(
 		"./node_modules/prettier/bin-prettier.js",
@@ -87,14 +107,7 @@ let child_process = (filepath, tmp_filepath) => {
 			"--write",
 			filepath
 		],
-		{
-			stdio: "pipe",
-			// Preserve terminal colors:
-			// [https://stackoverflow.com/a/43375301]
-			env: {
-				FORCE_COLOR: true
-			}
-		}
+		options
 	);
 };
 
