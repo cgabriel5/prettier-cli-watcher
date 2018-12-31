@@ -42,16 +42,28 @@ let dynamicreg = array => {
 	}
 	// Remove the last "|" from array.
 	source.pop();
+
+	// Copy parts to create a left side path check for hound.
+	let left_parts = [...source];
+	// Remove the first item.
+	left_parts.shift();
+	// Add closing and ending patterns.
+	left_parts.unshift("\\/((");
+	left_parts.push("))");
+
 	// Add closing RegExp syntax.
 	source.push(")\\/)");
 
 	// Create dynamic RegExp.
-	let dr = new RegExp(source.join(""));
+	let dynamic_regexp_right = new RegExp(source.join(""));
+	let dynamic_regexp_left = new RegExp(left_parts.join(""));
 
+	// Attach the left RegExp to the main right RegExp.
+	dynamic_regexp_right.left_regexp = dynamic_regexp_left;
 	// Store original input as a string for later access.
-	dr.string = array.join("|");
+	dynamic_regexp_right.string = array.join("|");
 
-	return dr;
+	return dynamic_regexp_right;
 };
 
 /**
@@ -104,7 +116,19 @@ module.exports = function() {
 	const nonotify = params.nonotify;
 	// Don't log error/success output to terminal?
 	const nolog = params.nolog;
+	// Default file watcher to chokidar.
+	const watcher = params.watcher || "chokidar";
 	const configpath_ori = preppath(params.configpath);
+
+	// Check if supplied file watcher is allowed.
+	if (!["chokidar", "hound"].includes(watcher)) {
+		console.log(
+			`[${chalk.red("error")}] ${chalk.bold(
+				"--watcher"
+			)} "${watcher}" is not supported. Provide 'chokidar' or 'hound'.`
+		);
+		process.exit();
+	}
 
 	// If a configpath is not provided exit and warn user.
 	if (!configpath_ori) {
@@ -190,7 +214,9 @@ module.exports = function() {
 	log(`  ${bold("--configpath")}="${yellow(configpath_ori)}"`);
 	log(`  ${bold("--ignoredirs")}="${yellow(ignoredirs.string)}"`);
 	log(`  ${bold("--extensions")}="${yellow(exts.join("|"))}"`);
+	log(`  ${bold("--watcher")}="${yellow(watcher)}"`);
 	log(`  ${bold("--nonotify")}=${magenta(nonotify || false)}`);
+	log(`  ${bold("--nolog")}=${magenta(nolog || false)}`);
 	log(`  ${bold("--nolog")}=${magenta(nolog || false)}`);
 
 	return {
@@ -200,6 +226,7 @@ module.exports = function() {
 		exts,
 		nonotify,
 		nolog,
-		tmps
+		tmps,
+		watcher_name: watcher
 	};
 };

@@ -1,12 +1,6 @@
 #!/usr/bin/env node
 "use strict";
 
-// Needed modules.
-const path = require("path");
-const chalk = require("chalk");
-const chokidar = require("chokidar");
-const notifier = require("node-notifier");
-
 // Get CLI parameters.
 const {
 	dir,
@@ -15,8 +9,14 @@ const {
 	exts,
 	nonotify,
 	nolog,
-	tmps
+	tmps,
+	watcher_name
 } = require("./params.js")();
+
+// Needed modules.
+const path = require("path");
+const chalk = require("chalk");
+const notifier = require("node-notifier");
 
 // Get change event utils.
 const {
@@ -33,15 +33,8 @@ const lookup = {
 };
 const line_sep = "-".repeat("60");
 
-// Initialize watcher.
-let watcher = chokidar.watch(dir, {
-	persistent: true,
-	ignoreInitial: true,
-	ignored: filepath => {
-		// Ignore paths containing following folders.
-		return ignoredirs.test(filepath);
-	}
-});
+// Get file watcher.
+const watcher = require("./watcher.js")(dir, watcher_name, ignoredirs);
 
 // Only react to file modifications.
 watcher.on("change", (filepath /*, stats*/) => {

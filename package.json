@@ -40,5 +40,8 @@
 	"engines": {
 		"node": ">=8.14.0",
 		"npm": ">=6.4.1"
+	},
+	"devDependencies": {
+		"hound": "^1.0.5"
 	}
 }
