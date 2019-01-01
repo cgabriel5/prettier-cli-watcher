@@ -53,6 +53,9 @@ Available parameters (_supplied via script command - see examples_):
 - `--dir="."`
   - The directory to watch.
   - By default watches entire project for file changes.
+- `--watcher="chokidar|hound"`
+  - The file watcher to use.
+  - By default uses [`chokidar`](https://github.com/paulmillr/chokidar) but can also use [`hound`](https://github.com/gforceg/node-hound).
 - `--configpath="path/to/prettier.config.json"` (`required`)
   - The path to your prettier config file.
 - `--ignoredirs="node_modules|bower_components|.git|dist"`
@@ -85,6 +88,10 @@ Available parameters (_supplied via script command - see examples_):
   // Example 2:
   // Only watch for ./src file changes made to .js files. Notifications and logging is left on.
   "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='./src' --extensions='js'"
+
+  // Example 3:
+  // Use all defaults but change file watcher to hound.
+  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --watcher='hound'"
 }
 ...
 ```
@@ -103,21 +110,22 @@ The following configuration will be applied to all allowed file extensions (univ
 }
 ```
 
-Per-extension configuration file, must be supplied in the following manner:
+Example per-extension configuration file:
 
 - `*`: The universal prettier configuration (`required`).
 - `md`: Configuration for `.md` files.
+- Other needed file extension configurations.
 
 ```json5
 { // prettier.config.json
-  "*": { // "*" → Universal configuration to apply to all allowed file extensions.
+  "*": { // Universal configuration to apply to all allowed file extensions.
     "bracketSpacing": true,
     "jsxBracketSameLine": false,
     "printWidth": 80,
     "semi": true
     ...other settings
   },
-  "md": { // Prettier configuration only applied to .md files.
+  "md": { // This configuration is only applied to .md files.
     "bracketSpacing": true,
     "jsxBracketSameLine": false,
     "printWidth": 120,
@@ -127,6 +135,14 @@ Per-extension configuration file, must be supplied in the following manner:
     "trailingComma": "none",
     "useTabs": false
   }
+  ...any other extension(s) configurations...
+  "json": {
+    ...settings
+  },
+  "html": {
+    ...settings
+  }
+  ...
 }
 ```
 
@@ -137,6 +153,8 @@ When using a per-extension configuration file the used prettier configuration wi
 ### Miscellaneous
 
 - Made using Node.js `v8.14.0` on a Linux machine running `Ubuntu 16.04.5 LTS`.
+- Tested and working on `macOS High Sierra (v10.13)`.
+  - **Note**: Using `chokidar` on `macOS` seems to fire `chokidar`'s `change` event twice. Switching the file watcher to `hound` works as intended; firing only one time per file change.
 
 ### Contributing
 
@@ -147,18 +165,18 @@ See how to contribute [here](/CONTRIBUTING.md).
 ### Attribution
 
 - <div>
-  		The error notification icon was made by
-  		<a href="https://www.flaticon.com/authors/roundicons" title="Roundicons">
-  			Roundicons
-  		</a>
-  		from
-  		<a href="https://www.flaticon.com/" title="Flaticon">
-  			www.flaticon.com
-  		</a>
-  		and is licensed under
-  		<a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">
-  			CC 3.0 BY</a>.
-  	</div>
+    The error notification icon was made by
+    <a href="https://www.flaticon.com/authors/roundicons" title="Roundicons">
+      Roundicons
+    </a>
+    from
+    <a href="https://www.flaticon.com/" title="Flaticon">
+      www.flaticon.com
+    </a>
+    and is licensed under
+    <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">
+      CC 3.0 BY</a>.
+  </div>
 
 ### License
 
