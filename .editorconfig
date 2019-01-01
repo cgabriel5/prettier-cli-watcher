@@ -19,3 +19,5 @@ indent_size = 4
 # Override and allow for Markdown files.
 [*.md]
 trim_trailing_whitespace = false
+indent_style = space
+indent_size = 2
