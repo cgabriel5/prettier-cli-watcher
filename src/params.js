@@ -135,10 +135,18 @@ module.exports = function() {
 	// Default file watcher to chokidar.
 	const watcher = params.watcher || "chokidar";
 	const configpath_ori = preppath(params.configpath);
-	// Deflect time that must pass to not perceive change event as a rapid/quick change.
-	const dtime = params.dtime || 500; // In milliseconds.
-	// Check deflect time. Must be a number and positive.
+	// Deflect time used to ignore rapid/quick file changes.
+	let dtime = params.dtime; // In milliseconds.
+	// Get the deflect time data type.
 	let type_dtime = dtype(dtime);
+
+	// If no deflect time is provided set a default.
+	if (!dtime && type_dtime !== "number") {
+		dtime = 500;
+		type_dtime = "number";
+	}
+
+	// Check deflect time. Must be a number and positive.
 	if (type_dtime !== "number") {
 		console.log(
 			`[${chalk.red("error")}] ${chalk.bold(
