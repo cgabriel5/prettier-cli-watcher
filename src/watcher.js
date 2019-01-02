@@ -18,6 +18,7 @@ module.exports = function(dir, watcher_name, ignoredirs) {
 	if (watcher_name === "chokidar") {
 		options = {
 			persistent: true,
+			alwaysStat: true,
 			ignoreInitial: true,
 			ignored: filepath => {
 				// Ignore paths containing following folders.
