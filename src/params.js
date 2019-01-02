@@ -11,6 +11,22 @@ const minimist = require("minimist");
 const escapereg = require("lodash.escaperegexp");
 
 /**
+ * Returns the data type of the provided object.
+ *
+ * @param  {*} object - The object to check.
+ * @return {string} - The data type of the checked object.
+ *
+ * @resource [https://stackoverflow.com/questions/7390426/better-way-to-get-type-of-a-javascript-variable]
+ */
+let dtype = function(object) {
+	// Will always return something like "[object {type}]".
+	return Object.prototype.toString
+		.call(object)
+		.replace(/(\[object |\])/g, "")
+		.toLowerCase();
+};
+
+/**
  * Converts a comma/pipe delimited string list into an array. Trims items
  *     as well.
  *
@@ -119,6 +135,28 @@ module.exports = function() {
 	// Default file watcher to chokidar.
 	const watcher = params.watcher || "chokidar";
 	const configpath_ori = preppath(params.configpath);
+	// Deflect time that must pass to not perceive change event as a rapid/quick change.
+	const dtime = params.dtime || 500; // In milliseconds.
+	// Check deflect time. Must be a number and positive.
+	let type_dtime = dtype(dtime);
+	if (type_dtime !== "number") {
+		console.log(
+			`[${chalk.red("error")}] ${chalk.bold(
+				"--dtime"
+			)} must be a number represented in milliseconds (${chalk.bold(
+				type_dtime
+			)} was provided).`
+		);
+		process.exit();
+	}
+	if (dtime < 0) {
+		console.log(
+			`[${chalk.red("error")}] ${chalk.bold(
+				"--dtime"
+			)} must be a positive number.`
+		);
+		process.exit();
+	}
 
 	// Check if supplied file watcher is allowed.
 	if (!["chokidar", "hound"].includes(watcher)) {
@@ -205,6 +243,7 @@ module.exports = function() {
 
 	// Get needed chalk methods.
 	const bold = chalk.bold;
+	const blue = chalk.blue;
 	const yellow = chalk.yellow;
 	const magenta = chalk.magenta;
 
@@ -215,6 +254,7 @@ module.exports = function() {
 	log(`  ${bold("--ignoredirs")}="${yellow(ignoredirs.string)}"`);
 	log(`  ${bold("--extensions")}="${yellow(exts.join("|"))}"`);
 	log(`  ${bold("--watcher")}="${yellow(watcher)}"`);
+	log(`  ${bold("--dtime")}=${blue(dtime)}`);
 	log(`  ${bold("--nonotify")}=${magenta(nonotify || false)}`);
 	log(`  ${bold("--nolog")}=${magenta(nolog || false)}`);
 	log(`  ${bold("--nolog")}=${magenta(nolog || false)}`);
@@ -227,6 +267,7 @@ module.exports = function() {
 		nonotify,
 		nolog,
 		tmps,
+		dtime,
 		watcher_name: watcher
 	};
 };

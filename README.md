@@ -53,9 +53,6 @@ Available parameters (_supplied via script command - see examples_):
 - `--dir="."`
   - The directory to watch.
   - By default watches entire project for file changes.
-- `--watcher="chokidar|hound"`
-  - The file watcher to use.
-  - By default uses [`chokidar`](https://github.com/paulmillr/chokidar) but can also use [`hound`](https://github.com/gforceg/node-hound).
 - `--configpath="path/to/prettier.config.json"` (`required`)
   - The path to your prettier config file.
 - `--ignoredirs="node_modules|bower_components|.git|dist"`
@@ -70,6 +67,14 @@ Available parameters (_supplied via script command - see examples_):
   - Provide to disable OS notifications.
 - `--nolog`
   - Provide to disable command line output.
+- `--watcher="chokidar|hound"`
+  - The file watcher to use.
+  - By default uses [`chokidar`](https://github.com/paulmillr/chokidar) but can also use [`hound`](https://github.com/gforceg/node-hound).
+- `--dtime=500` (_deflect time_)
+  - The amount of time, in milliseconds, to deflect and ignore rapid file modifications.
+    - A larger time allows for more rapid file changes to be caught and ignored.
+  - By default `--dtime=500` is used (500 milliseconds).
+    - `--dtime=0` disables deflection check logic all together.
 
 ### Examples
 
@@ -87,7 +92,7 @@ Available parameters (_supplied via script command - see examples_):
 
   // Example 2:
   // Only watch for ./src file changes made to .js files. Notifications and logging is left on.
-  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='./src' --extensions='js'"
+  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='./src' --extensions='js'",
 
   // Example 3:
   // Use all defaults but change file watcher to hound.
@@ -154,7 +159,6 @@ When using a per-extension configuration file the used prettier configuration wi
 
 - Made using Node.js `v8.14.0` on a Linux machine running `Ubuntu 16.04.5 LTS`.
 - Tested and working on `macOS High Sierra (v10.13)`.
-  - **Note**: Using `chokidar` on `macOS` seems to fire `chokidar`'s `change` event twice. Switching the file watcher to `hound` works as intended; firing only one time per file change.
 
 ### Contributing
 

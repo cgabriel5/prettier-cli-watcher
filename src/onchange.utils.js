@@ -112,6 +112,55 @@ let child_process = (filepath, tmp_filepath) => {
 };
 
 /**
+ * Quick file change deflection logic (deflects rapid changes made to file).
+ *
+ * @param  {object} lookup - The lookup db object.
+ * @param  {string} filepath - The file path of the modified file.
+ * @param  {object} stats - The file stats object.
+ * @param  {boolean} deflected - Boolean indicating whether last change
+ *     event was deflected.
+ * @param  {number} dtime - The time that must pass to not perceive
+ *     change event as a rapid/quick change.
+ * @return {boolean} - Boolean indicating whether change event should be
+ *     deflected.
+ */
+let quick_deflect = (lookup, filepath, stats, deflected, dtime, handler) => {
+	// Note: A dtime value of 0 skips deflection logic check.
+	if (!dtime) {
+		return false;
+	}
+
+	// Get last recorded change on the modified file.
+	let last_change = lookup.changes[filepath];
+	// Get file's modified time.
+	let mtime = stats.mtime.getTime();
+	// If a last recorded time and it is not a quick deflection...
+	if (last_change && !deflected) {
+		// Calculate difference between last recorded and file modified time.
+		let last_change_time_diff = mtime - last_change;
+		// If the time difference is less than allowed deflect time the
+		// change was performed to close to the last change to clear
+		// the last set timeout.
+		if (last_change_time_diff < dtime) {
+			if (lookup.timeouts[filepath]) {
+				clearTimeout(lookup.timeouts[filepath]);
+				delete lookup.timeouts[filepath];
+			}
+			// If the time difference is negative don't create new timeout.
+			if (last_change_time_diff >= 0) {
+				lookup.timeouts[filepath] = setTimeout(function() {
+					handler(filepath, stats, true /*← quick deflect flag*/);
+				}, 150);
+			}
+
+			return true;
+		}
+	}
+
+	return false;
+};
+
+/**
  * Kills the currently running/active process on the file.
  *
  * @param  {object} lookup - The lookup db object.
@@ -134,6 +183,7 @@ let kill_active_process = (lookup, filepath) => {
 module.exports = {
 	fileinfo,
 	child_process,
+	quick_deflect,
 	kill_active_process,
 	is_allowed_file_extension
 };

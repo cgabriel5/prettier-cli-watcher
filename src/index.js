@@ -10,7 +10,8 @@ const {
 	nonotify,
 	nolog,
 	tmps,
-	watcher_name
+	watcher_name,
+	dtime
 } = require("./params.js")();
 
 // Needed modules.
@@ -23,21 +24,29 @@ const {
 	fileinfo,
 	child_process,
 	kill_active_process,
+	quick_deflect,
 	is_allowed_file_extension
 } = require("./onchange.utils.js");
 
 // Keep track of active prettified files.
 const lookup = {
 	processes: {},
-	errors: {}
+	errors: {},
+	changes: {},
+	timeouts: {}
 };
 const line_sep = "-".repeat("60");
 
-// Get file watcher.
-const watcher = require("./watcher.js")(dir, watcher_name, ignoredirs);
-
-// Only react to file modifications.
-watcher.on("change", (filepath /*, stats*/) => {
+/**
+ * Watcher handler function. Main logic of watcher.
+ *
+ * @param  {string} filepath - Filepath of modified file.
+ * @param  {object} stats - Modified file's stats.
+ * @param  {boolean} deflected - Boolean indicating whether last change was
+ *     deflected due to quick file changes.
+ * @return {undefined} - Nothing is returned.
+ */
+let handler = (filepath, stats, deflected) => {
 	// Prefix filepath with ./ if not already.
 	if (!filepath.startsWith("./")) {
 		filepath = `./${filepath}`;
@@ -49,6 +58,12 @@ watcher.on("change", (filepath /*, stats*/) => {
 	// prettier process could finish. Therefore, the old process is killed
 	// and to then start a new one.
 	kill_active_process(lookup, filepath);
+
+	// If many changes are made to the file in rapid succession deflect all
+	// of them and use a set timeout to only run on last change.
+	if (quick_deflect(lookup, filepath, stats, deflected, dtime, handler)) {
+		return;
+	}
 
 	// Get the file path information (name, dirname, etc.).
 	let {
@@ -116,6 +131,9 @@ watcher.on("change", (filepath /*, stats*/) => {
 	});
 
 	cprocess.on("close", () => {
+		// Update the last change time.
+		lookup.changes[filepath] = Date.now();
+
 		// If the process was killed manually do not continue with
 		// logging/notification logic.
 		if (cprocess.__killed_off__) {
@@ -162,8 +180,8 @@ watcher.on("change", (filepath /*, stats*/) => {
 
 			// Store error information.
 			lookup.errors[filepath] = { response, lineinfo, time: Date.now() };
-			// Create error message.
 
+			// Create error message.
 			message = `${response
 				// Replace old file path with custom file path and
 				// red highlighted line numbers.
@@ -203,4 +221,7 @@ watcher.on("change", (filepath /*, stats*/) => {
 			console.log(`${line_sep}\n${message}`);
 		}
 	});
-});
+};
+
+// Get file watcher and only react to file modifications.
+require("./watcher.js")(dir, watcher_name, ignoredirs).on("change", handler);
