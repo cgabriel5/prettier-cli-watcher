@@ -82,7 +82,7 @@ Available parameters (_supplied via script command - see examples_):
 ...
 "scripts": {
   // Default setup...
-  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='.' --ignoredirs='node_modules|bower_components|.git|dist' --extensions='js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql'",
+  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='.' --ignoredirs='node_modules|bower_components|.git|dist' --extensions='js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql' --watcher='chokidar' --dtime='500'",
   // ...is the same as:
   "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json'",
 
