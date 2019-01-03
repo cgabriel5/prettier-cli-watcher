@@ -265,7 +265,6 @@ module.exports = function() {
 	log(`  ${bold("--dtime")}=${blue(dtime)}`);
 	log(`  ${bold("--nonotify")}=${magenta(nonotify || false)}`);
 	log(`  ${bold("--nolog")}=${magenta(nolog || false)}`);
-	log(`  ${bold("--nolog")}=${magenta(nolog || false)}`);
 
 	return {
 		dir,
