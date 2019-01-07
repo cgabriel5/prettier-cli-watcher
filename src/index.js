@@ -56,6 +56,9 @@ const line_sep = "-".repeat("60");
  * @return {undefined} - Nothing is returned.
  */
 let handler = (filepath, stats, deflected) => {
+	// Store original file path.
+	let orig_filepath = filepath;
+
 	// Note: Convert Windows file slahses.
 	if (system.is_windows) {
 		filepath = slash(filepath);
@@ -201,19 +204,35 @@ let handler = (filepath, stats, deflected) => {
 			// Store error information.
 			lookup.errors[filepath] = { response, lineinfo, time: Date.now() };
 
+			// Cleanup original path.
+			orig_filepath = orig_filepath.replace(/^\.\//, "");
+			// Prep dynamic RegExp for Windows.
+			if (system.is_windows) {
+				// Add extra forward slahes so dynamic RegExp works on Windows.
+				orig_filepath = orig_filepath.replace(/\\/g, "\\\\");
+			}
+
 			// Create error message.
 			message = `${response
 				// Replace old file path with custom file path and
 				// red highlighted line numbers.
 				.replace(
-					new RegExp(`(\\.\\/)?${filepath.replace(/^\.\//, "")}:`),
+					new RegExp(`(\\.\\/)?${orig_filepath}:`),
 					`⛔ ${custom_filepath}:${chalk.bold.red(
 						lineinfo.replace(/\(|\)/g, "")
 					)} —`
 				)
-				.replace(/error/, `error${chalk.black(pconfig)}`)
+				.replace(/error/, `error${chalk(pconfig)}`)
 				// Remove original line information.
 				.replace(lineinfo, "")}`;
+
+			// Make error decorations red for Windows.
+			if (system.is_windows) {
+				message = message.replace(
+					/^\[error/gm,
+					`[${chalk.red("error")}`
+				);
+			}
 
 			// Send OS notification that prettier failed.
 			if (!nonotify) {
