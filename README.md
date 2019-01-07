@@ -1,10 +1,30 @@
 # prettier-cli-watcher
 
+##### Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Install](#install)
+- [How To Use](#how-to-use)
+  - [Ubuntu/macOS](#how-to-use-non-windows)
+  - [Windows](#how-to-use-windows)
+- [Options](#options)
+- [Examples](#examples)
+- [Per-extension Configurations](#per-extension-configurations)
+- [OS Support](#os-support)
+- [Contributing](#contributing)
+- [Attribution](#attribution)
+- [License](#license)
+
+<a name="overview"></a>
+
 ### Overview
 
 Runs [prettier](https://github.com/prettier/prettier) (from CLI) on project files when modified.
 
 <img src="/src/assets/img/example-output.png" width="65%">
+
+<a name="features"></a>
 
 ### Features
 
@@ -12,9 +32,11 @@ Runs [prettier](https://github.com/prettier/prettier) (from CLI) on project file
   - Pressing <kbd>ctrl</kbd> + <kbd>s</kbd> in rapid succession on a file runs prettier only on the last save.
 - Sends OS notification and logs location of error when prettier fails to format file.
   - Logging/notifications on by default (can be disabled).
-- [Per-extension prettier configurations.](#Extension-Specific-Configurations)
+- [Per-extension prettier configurations.](#per-extension-configurations)
   - Have different prettier configurations for different file extensions.
   - For example, have a universal configuration for all allowed files but a different one for `.md` files.
+
+<a name="install"></a>
 
 ### Install
 
@@ -26,7 +48,13 @@ npm install prettier-cli-watcher --save-dev
 yarn add prettier-cli-watcher --dev
 ```
 
+<a name="how-to-use"></a>
+
 ### How To Use
+
+<a name="how-to-use-non-windows"></a>
+
+#### Ubuntu/macOS
 
 ```json5
 // Add following script to your package.json scripts. Make sure to provide the
@@ -38,6 +66,23 @@ yarn add prettier-cli-watcher --dev
 ...
 ```
 
+<a name="how-to-use-windows"></a>
+
+#### Windows
+
+```json5
+// If using Windows escape (\") options where needed or don't use (') as shown:
+...
+"scripts": {
+  // Surround value with \" to escape:
+  "pretty": "prettier-cli-watcher --configpath=\"/configs/prettier.config.json\"",
+
+  // Or don't use apostrophes ('):
+  "pretty": "prettier-cli-watcher --configpath=/configs/prettier.config.json"
+}
+...
+```
+
 ```shell
 # Then run with npm:
 npm run pretty
@@ -45,6 +90,8 @@ npm run pretty
 # or yarn:
 yarn run pretty
 ```
+
+<a name="options"></a>
 
 ### Options
 
@@ -76,6 +123,8 @@ Available parameters (_supplied via script command - see examples_):
   - By default `--dtime=500` is used (500 milliseconds).
     - `--dtime=0` disables deflection check logic all together.
 
+<a name="examples"></a>
+
 ### Examples
 
 ```json5
@@ -101,7 +150,9 @@ Available parameters (_supplied via script command - see examples_):
 ...
 ```
 
-### Extension Specific Configurations
+<a name="extension-specific-configurations"></a>
+
+### Per-extension Configurations
 
 The following configuration will be applied to all allowed file extensions (universal configuration).
 
@@ -140,7 +191,7 @@ Example per-extension configuration file:
     "trailingComma": "none",
     "useTabs": false
   }
-  ...any other extension(s) configurations...
+  ...any other extension configurations...
   "json": {
     ...settings
   },
@@ -155,16 +206,24 @@ When using a per-extension configuration file the used prettier configuration wi
 
 <img src="/src/assets/img/example-output-multi-config.png" width="65%">
 
-### Miscellaneous
+<a name="os-support"></a>
+
+### OS Support
 
 - Made using Node.js `v8.14.0` on a Linux machine running `Ubuntu 16.04.5 LTS`.
-- Tested and working on `macOS High Sierra (v10.13)`.
+- Tested and working on:
+  - `macOS High Sierra (v10.13)`.
+  - `Windows 10 (v1703 OS Build: 15063.674)`.
+
+<a name="contributing"></a>
 
 ### Contributing
 
 Contributions are welcome! Found a bug, feel like documentation is lacking/confusing and needs an update, have performance/feature suggestions or simply found a typo? Let me know! :)
 
 See how to contribute [here](/CONTRIBUTING.md).
+
+<a name="attribution"></a>
 
 ### Attribution
 
@@ -181,6 +240,8 @@ See how to contribute [here](/CONTRIBUTING.md).
     <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">
       CC 3.0 BY</a>.
   </div>
+
+<a name="license"></a>
 
 ### License
 
