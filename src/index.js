@@ -25,6 +25,7 @@ const notifier = require("node-notifier");
 const platform = os.platform();
 const system = {
 	platform,
+	is_macos: platform === "darwin",
 	is_windows: platform === "win32"
 };
 
@@ -226,8 +227,8 @@ let handler = (filepath, stats, deflected) => {
 				// Remove original line information.
 				.replace(lineinfo, "")}`;
 
-			// Make error decorations red for Windows.
-			if (system.is_windows) {
+			// Highlight error decorations for the following platforms.
+			if (system.is_windows || system.is_macos) {
 				message = message.replace(
 					/^\[error/gm,
 					`[${chalk.red("error")}`
