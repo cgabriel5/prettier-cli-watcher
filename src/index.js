@@ -15,9 +15,18 @@ const {
 } = require("./params.js")();
 
 // Needed modules.
+const os = require("os");
 const path = require("path");
 const chalk = require("chalk");
+const slash = require("slash");
 const notifier = require("node-notifier");
+
+// Get system/platform information.
+const platform = os.platform();
+const system = {
+	platform,
+	is_windows: platform === "win32"
+};
 
 // Get change event utils.
 const {
@@ -47,6 +56,11 @@ const line_sep = "-".repeat("60");
  * @return {undefined} - Nothing is returned.
  */
 let handler = (filepath, stats, deflected) => {
+	// Note: Convert Windows file slahses.
+	if (system.is_windows) {
+		filepath = slash(filepath);
+	}
+
 	// Prefix filepath with ./ if not already.
 	if (!filepath.startsWith("./")) {
 		filepath = `./${filepath}`;
@@ -230,4 +244,7 @@ let handler = (filepath, stats, deflected) => {
 };
 
 // Get file watcher and only react to file modifications.
-require("./watcher.js")(dir, watcher_name, ignoredirs).on("change", handler);
+require("./watcher.js")(dir, watcher_name, ignoredirs, system).on(
+	"change",
+	handler
+);

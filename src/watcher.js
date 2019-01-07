@@ -7,9 +7,10 @@
  * @param  {string} dir - The directory to watch.
  * @param  {string} watcher_name - Name of file watcher to use.
  * @param  {regexp} ignoredirs - RegExp object used to filter dirs/files.
+ * @param  {object} system - Device platform information.
  * @return {object} - The file watcher.
  */
-module.exports = function(dir, watcher_name, ignoredirs) {
+module.exports = function(dir, watcher_name, ignoredirs, system) {
 	// Use chokidar by default.
 	let watcher = "chokidar";
 	// The watcher options.
@@ -29,6 +30,7 @@ module.exports = function(dir, watcher_name, ignoredirs) {
 		watcher = "./hound.js";
 
 		options = {
+			system,
 			// Pass dynamic RegExp.
 			ignored: ignoredirs
 		};

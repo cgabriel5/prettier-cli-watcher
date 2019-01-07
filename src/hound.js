@@ -35,10 +35,12 @@
 
 "use strict";
 
-var fs = require("fs"),
-	util = require("util"),
-	events = require("events"),
-	path = require("path");
+// Needed modules.
+const fs = require("fs");
+const path = require("path");
+const util = require("util");
+const upath = require("upath");
+const events = require("events");
 
 /**
  * Watch one or more files or directories for changes.
@@ -72,9 +74,15 @@ Hound.prototype.watchers = [];
  * @param  {string} __path - The file path to check.
  * @param  {regexp} ignoredirs_regexp - The dynamically created RegExp object
  *     created using the provided user ignoredirs.
+ * @param  {object} system - Device platform information.
  * @return {boolean} - Boolean indicating whether path should be ignored.
  */
-let ignoredirs = (__path, ignoredirs_regexp) => {
+let ignoredirs = (__path, ignoredirs_regexp, system) => {
+	// Note: Normalize path slashes for Windows.
+	if (system.is_windows) {
+		__path = upath.normalizeSafe(__path);
+	}
+
 	// Get path stats.
 	let stats = fs.statSync(__path);
 
@@ -107,11 +115,11 @@ let ignoredirs = (__path, ignoredirs_regexp) => {
 Hound.prototype.watch = function(src) {
 	var self = this;
 
-	// Get the dynamic ignore dirs RegExp.
-	let { ignored, extensions, extcheck } = self.options;
+	// Get the dynamic ignore dirs RegExp and other options.
+	let { ignored, extensions, extcheck, system } = self.options;
 
 	// Ignore paths containing ignore dirs.
-	if (ignoredirs(src, ignored)) {
+	if (ignoredirs(src, ignored, system)) {
 		return;
 	}
 
@@ -125,7 +133,7 @@ Hound.prototype.watch = function(src) {
 			let file = files[i];
 			// Create path.
 			let __path = path.join(src, file);
-			if (ignoredirs(__path, ignored)) {
+			if (ignoredirs(__path, ignored, system)) {
 				continue;
 			}
 			self.watch(src + path.sep + file);
