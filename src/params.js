@@ -240,7 +240,8 @@ module.exports = function() {
 
 		// Create temporary prettier config file.
 		let { path: tmp_filepath } = temp.openSync({
-			prefix: `${cext}-`,
+			// Note: "*" fails on Windows. Use "all" for file name instead.
+			prefix: `${cext === "*" ? "all" : cext}-`,
 			suffix: ".json"
 		});
 		// Store path for later access.

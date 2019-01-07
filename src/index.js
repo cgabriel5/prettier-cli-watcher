@@ -105,6 +105,12 @@ let handler = (filepath, stats, deflected) => {
 			: ""
 	}`;
 
+	// If using a multi-config indicator reset the value due to Windows issue.
+	// Check note in params.js.
+	if (pconfig.trim() === "all") {
+		pconfig = " *";
+	}
+
 	// Create the child process.
 	const cprocess = child_process(filepath, tmp_filepath);
 	// Store process reference.
