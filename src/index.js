@@ -237,12 +237,20 @@ let handler = (filepath, stats, deflected) => {
 
 			// Send OS notification that prettier failed.
 			if (!nonotify) {
-				notifier.notify({
+				// Notification options.
+				let noptions = {
 					title: "prettier-cli-watcher",
 					message: `${filepath} format failed. ${lineinfo}`,
 					// [https://www.flaticon.com/free-icon/warning_196759#term=error&page=1&position=16]
 					icon: path.join(__dirname, "/assets/img/warning.png")
-				});
+				};
+				// Add close action button for macOS.
+				if (system.is_macos) {
+					noptions.actions = "Close";
+				}
+
+				// Send notification.
+				notifier.notify(noptions);
 			}
 		} else {
 			// Remove error information.
