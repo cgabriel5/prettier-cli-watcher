@@ -116,7 +116,7 @@ Hound.prototype.watch = function(src) {
 	var self = this;
 
 	// Get the dynamic ignore dirs RegExp and other options.
-	let { ignored, extensions, extcheck, system } = self.options;
+	let { ignored, /*extensions, extcheck,*/ system } = self.options;
 
 	// Ignore paths containing ignore dirs.
 	if (ignoredirs(src, ignored, system)) {
@@ -139,7 +139,7 @@ Hound.prototype.watch = function(src) {
 			self.watch(src + path.sep + file);
 		}
 	}
-	self.watchers[src] = watchFn(src, function(event, filename) {
+	self.watchers[src] = watchFn(src, function(/*event, filename*/) {
 		if (fs.existsSync(src)) {
 			stats = fs.statSync(src);
 			if (stats.isFile()) {

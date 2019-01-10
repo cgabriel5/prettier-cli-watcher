@@ -4,7 +4,7 @@
 // Get CLI parameters.
 const {
 	dir,
-	configpath,
+	// configpath,
 	ignoredirs,
 	exts,
 	nonotify,
