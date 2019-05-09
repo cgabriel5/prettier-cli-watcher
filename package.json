@@ -48,7 +48,7 @@
 	"devDependencies": {
 		"cross-env": "^5.2.0",
 		"eslint": "5.3.0",
-		"eslint-config-simple": "^0.0.4",
-		"eslint-formatter-simple": "^0.0.4"
+		"eslint-config-simple": "^0.0.5",
+		"eslint-formatter-simple": "^0.0.5"
 	}
 }

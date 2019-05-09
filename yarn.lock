@@ -516,10 +516,10 @@ eslint-config-prettier@^4.2.0:
   dependencies:
     get-stdin "^6.0.0"
 
-eslint-config-simple@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/eslint-config-simple/-/eslint-config-simple-0.0.4.tgz#6cb153b37056511096089a921193514410095667"
-  integrity sha512-yhLbaiMIorRJGN6fepePb55XHCva7nmKpIQdHTAaIjR1kb4BGGAqrQe6dS950qrk23rbkt5tWdobYx9/R1v+xg==
+eslint-config-simple@^0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/eslint-config-simple/-/eslint-config-simple-0.0.5.tgz#9993f297627e5cff109aee74ea6c28968e298fc0"
+  integrity sha512-jo285ZY7d06BX2Z18b3x3Mi0wE4ydrtb6bq9jQh+zIFbkOmEX/qTlnXAh3jeXiviGtrcMerEYNTkHkIg+qZokg==
   dependencies:
     babel-eslint "^10.0.1"
     eslint-config-airbnb "^17.1.0"
@@ -529,10 +529,10 @@ eslint-config-simple@^0.0.4:
     eslint-plugin-prettier "^3.0.0"
     eslint-plugin-react "^7.13.0"
 
-eslint-formatter-simple@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/eslint-formatter-simple/-/eslint-formatter-simple-0.0.4.tgz#c5cee6f75d23e31f808f82becdc7beefb7fce840"
-  integrity sha512-SNdqUWlPoeYUCjpGrQizE7q7K2r573HS0dqx1A1BC8ZFZR0UW7RJdeYqSnunrmrNdoqvcgIH4WNCFtqtePNlwQ==
+eslint-formatter-simple@^0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/eslint-formatter-simple/-/eslint-formatter-simple-0.0.5.tgz#7af6537e236ac9d032845e628ed56224609c7ceb"
+  integrity sha512-JAA8KYEPByaKoLMUpYOdS6Fmv4lk7cVEa8syhBUTZoCmUvDfslf6GgqrfqWoUhOD7PSeqwSJY5gJmXSPP3RDKQ==
   dependencies:
     archy "^1.0.0"
     chalk "^2.4.2"
