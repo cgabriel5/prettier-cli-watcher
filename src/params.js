@@ -215,7 +215,8 @@ module.exports = function() {
 	};
 
 	// Check if using a per-extension-file configuration file.
-	if (config.hasOwnProperty("*")) {
+	// [https://eslint.org/docs/rules/no-prototype-builtins]
+	if (Object.prototype.hasOwnProperty.call(config, "*")) {
 		remove_parser(config["*"]);
 
 		// Set flag.

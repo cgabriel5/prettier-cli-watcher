@@ -108,7 +108,11 @@ let handler = (filepath, stats, deflected) => {
 	// -→ watcher.unwatch(filepath);
 
 	// Get prettier config temp file (check for extension specific config).
-	let tmp_filepath = tmps.hasOwnProperty(file_extension)
+	// [https://eslint.org/docs/rules/no-prototype-builtins]
+	let tmp_filepath = Object.prototype.hasOwnProperty.call(
+		tmps,
+		file_extension
+	)
 		? tmps[file_extension]
 		: tmps["*"];
 
