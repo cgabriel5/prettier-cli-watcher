@@ -223,7 +223,7 @@ let handler = (filepath, stats, deflected) => {
 				// red highlighted line numbers.
 				.replace(
 					new RegExp(`(\\.\\/)?${orig_filepath}:`),
-					`⛔ ${custom_filepath}:${chalk.bold.red(
+					`${custom_filepath}:${chalk.bold.red(
 						lineinfo.replace(/\(|\)/g, "")
 					)} —`
 				)
@@ -265,7 +265,7 @@ let handler = (filepath, stats, deflected) => {
 			// Create success message.
 			message = `[${chalk.cyan(
 				"prettied"
-			)}${pconfig}] 😎 ${custom_filepath} ${duration}`;
+			)}${pconfig}] ${custom_filepath} ${duration}`;
 		}
 
 		// Log success/error message.
