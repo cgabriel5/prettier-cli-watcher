@@ -1,6 +1,6 @@
 {
 	"name": "prettier-cli-watcher",
-	"version": "0.3.5",
+	"version": "0.3.6",
 	"description": "Runs prettier (from CLI) on project file(s) when modified.",
 	"main": "./src/index.js",
 	"bin": {
