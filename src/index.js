@@ -145,13 +145,13 @@ let handler = (filepath, stats, deflected) => {
 
 	// -- Process Events --//
 
-	cprocess.stdout.on("data", data => {
+	cprocess.stdout.on("data", (data) => {
 		// Capture output for later use.
 		res = data;
 		// Reset flag.
 		errored = false;
 	});
-	cprocess.stderr.on("data", data => {
+	cprocess.stderr.on("data", (data) => {
 		// Capture output for later use.
 		res = data;
 		// Reset flag.
