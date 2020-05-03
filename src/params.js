@@ -258,14 +258,15 @@ module.exports = function () {
 	const magenta = chalk.magenta;
 
 	// Print the used flags and their values.
-	console.log(`${bold("--dir")}="${yellow(dir)}"`);
-	console.log(`${bold("--configpath")}="${yellow(configpath_ori)}"`);
-	console.log(`${bold("--ignoredirs")}="${yellow(ignoredirs.string)}"`);
-	console.log(`${bold("--extensions")}="${yellow(exts.join("|"))}"`);
-	console.log(`${bold("--watcher")}="${yellow(watcher)}"`);
-	console.log(`${bold("--dtime")}=${blue(dtime)}`);
-	console.log(`${bold("--nonotify")}=${magenta(nonotify || false)}`);
-	console.log(`${bold("--nolog")}=${magenta(nolog || false)}`);
+	console.log(`--dir="${yellow(dir)}"`);
+	console.log(`--configpath="${yellow(usedconfigpath)}"`);
+	console.log(`--ignoredirs="${yellow(ignoredirs.string)}"`);
+	console.log(`--extensions="${yellow(exts.join("|"))}"`);
+	console.log(`--watcher="${yellow(watcher)}"`);
+	console.log(`--dtime=${blue(dtime)}`);
+	console.log(`--nonotify=${magenta(nonotify || false)}`);
+	console.log(`--nolog=${magenta(nolog || false)}`);
+	console.log(chalk.bold("Watching..."));
 
 	return {
 		dir,
