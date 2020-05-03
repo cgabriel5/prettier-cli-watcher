@@ -167,10 +167,11 @@ module.exports = function () {
 		process.exit();
 	}
 
-	const app = "prettier";
+	let res = {};
 	let config = {};
-	let configpath = params.configpath;
+	const app = "prettier";
 	let usedconfigpath = "";
+	let configpath = params.configpath;
 	if (configpath) {
 		// Get absolute path if path is relative.
 		// [https://www.stackoverflow.com/a/30450519]
@@ -178,8 +179,7 @@ module.exports = function () {
 		if (!path.isAbsolute(configpath)) configpath = path.resolve(configpath);
 		const explorer = cosmiconfigSync(app);
 		try {
-			config = explorer.load(configpath);
-			usedconfigpath = configpath;
+			res = explorer.load(configpath);
 		} catch (err) {
 			let issue = "Could not parse config";
 			if (err.syscall && err.syscall === "open") {
@@ -233,12 +233,13 @@ module.exports = function () {
 		explorer.clearCaches();
 		res = explorer.search() || { config: {}, isEmpty: true, filepath: "" };
 	}
-			isEmpty: true,
-			filepath: ""
-		};
-		config = res.config;
-		usedconfigpath = res.filepath;
-		// let rconfigpath = path.relative(process.cwd(), res.filepath);
+
+	config = res.config;
+	usedconfigpath = res.filepath;
+
+	// If config file is relative to watch dir, make path relative.
+	if (usedconfigpath.startsWith(process.cwd())) {
+		usedconfigpath = "./" + path.relative(process.cwd(), usedconfigpath);
 	}
 
 	temp.track(); // Automatically track/cleanup temp files at exit.
