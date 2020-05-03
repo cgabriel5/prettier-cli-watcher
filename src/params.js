@@ -19,7 +19,7 @@ const escapereg = require("lodash.escaperegexp");
  *
  * @resource [https://stackoverflow.com/questions/7390426/better-way-to-get-type-of-a-javascript-variable]
  */
-let dtype = function(object) {
+let dtype = function (object) {
 	// Will always return something like "[object {type}]".
 	return Object.prototype.toString
 		.call(object)
@@ -34,8 +34,8 @@ let dtype = function(object) {
  * @param  {string} list - The list to convert to array.
  * @return {array} - The array.
  */
-let toarray = list => {
-	return list.split(/,|\|/).map(item => {
+let toarray = (list) => {
+	return list.split(/,|\|/).map((item) => {
 		return item.trim();
 	});
 };
@@ -48,7 +48,7 @@ let toarray = list => {
  * @param  {array} array - The array of dirs to ignore.
  * @return {regexpObject} - The RegExp object.
  */
-let dynamicreg = array => {
+let dynamicreg = (array) => {
 	// Add opening RegExp syntax.
 	let source = ["(("];
 
@@ -88,7 +88,7 @@ let dynamicreg = array => {
  *
  * @return {object} - Object containing parameters and their values.
  */
-module.exports = function() {
+module.exports = function () {
 	// Parse/get parameters.
 	const params = minimist(process.argv.slice(2));
 
@@ -201,7 +201,7 @@ module.exports = function() {
 	 * @param  {object} conf - The default prettier config.
 	 * @return {undefined} - Nothing.
 	 */
-	let remove_parser = conf => {
+	let remove_parser = (conf) => {
 		delete conf.parser;
 	};
 

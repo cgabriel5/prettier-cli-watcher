@@ -52,7 +52,7 @@ const events = require("events");
  * @param {array} options
  * @return {Hound}
  */
-exports.watch = function(src, options) {
+exports.watch = function (src, options) {
 	var watcher = new Hound(options);
 	watcher.watch(src);
 	return watcher;
@@ -105,7 +105,7 @@ let ignoredirs = (p, ignoredirs_regexp, system) => {
  * @param {string} src
  * @return {Hound}
  */
-Hound.prototype.watch = function(src) {
+Hound.prototype.watch = function (src) {
 	var self = this;
 
 	// Get the dynamic ignore dirs RegExp and other options.
@@ -132,7 +132,7 @@ Hound.prototype.watch = function(src) {
 			self.watch(src + path.sep + file);
 		}
 	}
-	self.watchers[src] = watchFn(src, function(/*event, filename*/) {
+	self.watchers[src] = watchFn(src, function (/*event, filename*/) {
 		if (fs.existsSync(src)) {
 			stats = fs.statSync(src);
 			if (stats.isFile()) {
@@ -172,7 +172,7 @@ Hound.prototype.watch = function(src) {
  * Unwatch a file or directory tree.
  * @param {string} src
  */
-Hound.prototype.unwatch = function(src) {
+Hound.prototype.unwatch = function (src) {
 	var self = this;
 	if (self.watchers[src] !== undefined) {
 		self.watchers[src].close();
@@ -184,7 +184,7 @@ Hound.prototype.unwatch = function(src) {
 /**
  * Unwatch all currently watched files and directories in this watcher.
  */
-Hound.prototype.clear = function() {
+Hound.prototype.clear = function () {
 	var self = this;
 	for (var file in this.watchers) {
 		self.unwatch(file);

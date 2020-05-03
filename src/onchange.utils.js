@@ -15,7 +15,7 @@ const spawn = require("cross-spawn-with-kill");
  * @param  {string} filepath - The complete file path.
  * @return {object} - Object containing file path components.
  */
-let fileinfo = filepath => {
+let fileinfo = (filepath) => {
 	// Get file extension.
 	let extension = ext(filepath);
 	// Get file name and directory path.
@@ -165,7 +165,7 @@ let quick_deflect = (lookup, filepath, stats, deflected, dtime, handler) => {
 			}
 			// If the time difference is negative don't create new timeout.
 			if (last_change_time_diff >= 0) {
-				lookup.timeouts[filepath] = setTimeout(function() {
+				lookup.timeouts[filepath] = setTimeout(function () {
 					handler(filepath, stats, true /*← quick deflect flag*/);
 				}, 150);
 			}

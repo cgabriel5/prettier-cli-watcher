@@ -10,7 +10,7 @@
  * @param  {object} system - Device platform information.
  * @return {object} - The file watcher.
  */
-module.exports = function(dir, watcher_name, ignoredirs, system) {
+module.exports = function (dir, watcher_name, ignoredirs, system) {
 	// Use chokidar by default.
 	let watcher = "chokidar";
 	// The watcher options.
@@ -21,7 +21,7 @@ module.exports = function(dir, watcher_name, ignoredirs, system) {
 			persistent: true,
 			alwaysStat: true,
 			ignoreInitial: true,
-			ignored: filepath => {
+			ignored: (filepath) => {
 				// Ignore paths containing following folders.
 				return ignoredirs.test(filepath);
 			}
