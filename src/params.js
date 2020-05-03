@@ -231,8 +231,8 @@ module.exports = function () {
 			}
 		});
 		explorer.clearCaches();
-		let res = explorer.search() || {
-			config: {},
+		res = explorer.search() || { config: {}, isEmpty: true, filepath: "" };
+	}
 			isEmpty: true,
 			filepath: ""
 		};
