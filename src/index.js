@@ -65,11 +65,6 @@ let handler = (filepath, stats, deflected) => {
 		filepath = slash(filepath);
 	}
 
-	// Prefix filepath with ./ if not already.
-	if (!filepath.startsWith("./")) {
-		filepath = `./${filepath}`;
-	}
-
 	// Check for an active prettier process on the file. If one exists
 	// kill it to start a new one. Kinda like the setTimeout/clearTimeout
 	// logic. This is done as the file was saved again before the current

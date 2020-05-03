@@ -71,35 +71,28 @@ Hound.prototype.watchers = [];
 /**
  * Filter paths against the user provided ignoredirs parameter.
  *
- * @param  {string} __path - The file path to check.
+ * @param  {string} p - The file path to check.
  * @param  {regexp} ignoredirs_regexp - The dynamically created RegExp object
  *     created using the provided user ignoredirs.
  * @param  {object} system - Device platform information.
  * @return {boolean} - Boolean indicating whether path should be ignored.
  */
-let ignoredirs = (__path, ignoredirs_regexp, system) => {
+let ignoredirs = (p, ignoredirs_regexp, system) => {
 	// Note: Normalize path slashes for Windows.
 	if (system.is_windows) {
-		__path = upath.normalizeSafe(__path);
+		p = upath.normalizeSafe(p);
 	}
-
-	// Get path stats.
-	let stats = fs.statSync(__path);
-
-	// Reset and cleanup path.
-	__path = "./" + __path.replace(/^(\.\/|\/)/, "");
-
+	let stats = fs.statSync(p);
 	if (stats.isDirectory()) {
 		// Add ending slash to check against right end dynamic RegExp.
-		__path += "/";
+		if (!p.endsWith("/")) p += "/";
 		return (
 			// Directory must pass both left/right dynamic RegExp checks.
-			ignoredirs_regexp.left_regexp.test(__path) &&
-			ignoredirs_regexp.test(__path) // Right check.
+			ignoredirs_regexp.left_regexp.test(p) && ignoredirs_regexp.test(p) // Right check.
 		);
 	} else {
 		// File: (right check) Can't contain any ignoreddirs in path.
-		return ignoredirs_regexp.test(__path);
+		return ignoredirs_regexp.test(p);
 	}
 };
 
@@ -132,8 +125,8 @@ Hound.prototype.watch = function(src) {
 			// Cache current file path.
 			let file = files[i];
 			// Create path.
-			let __path = path.join(src, file);
-			if (ignoredirs(__path, ignored, system)) {
+			let p = path.join(src, file);
+			if (ignoredirs(p, ignored, system)) {
 				continue;
 			}
 			self.watch(src + path.sep + file);

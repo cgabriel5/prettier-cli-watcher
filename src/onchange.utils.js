@@ -5,6 +5,8 @@ const os = require("os");
 const path = require("path");
 const chalk = require("chalk");
 const ext = require("file-extension");
+const de = require("directory-exists");
+const fe = require("file-exists");
 const spawn = require("cross-spawn-with-kill");
 
 /**

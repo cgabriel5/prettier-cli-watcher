@@ -83,32 +83,6 @@ let dynamicreg = array => {
 };
 
 /**
- * Prep and cleanup path so that it works with chokidar.
- *
- * @param  {string} path - The path to prep.
- * @return {string} - The prepped path.
- */
-let preppath = path => {
-	// Possible transforms:
-	// ./     → .
-	// /      → .
-	// .      → .
-	// /dir   → dir
-	// /dir/  → dir
-	// ./dir/ → dir
-
-	// Remove the starting "./?" and trailing "/" from path.
-	path = path.replace(/^(\.?\/)|\/$/g, "");
-
-	// Reset path if it's a single dot.
-	if (path === ".") {
-		path = "";
-	}
-
-	return path === "" ? "." : path;
-};
-
-/**
  * Get and parse CLI parameters.
  *
  * @return {object} - Object containing parameters and their values.
@@ -124,7 +98,8 @@ module.exports = function() {
 		"js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql";
 
 	// Directory to watch.
-	const dir = preppath(params.dir || ".");
+	let dir = params.dir || process.cwd();
+
 	// Directories to ignore.
 	const ignoredirs = dynamicreg(toarray(params.ignoredirs || def_ignoredirs));
 	const exts = toarray(params.extensions || def_exts);
@@ -134,7 +109,7 @@ module.exports = function() {
 	const nolog = params.nolog;
 	// Default file watcher to chokidar.
 	const watcher = params.watcher || "chokidar";
-	const configpath_ori = preppath(params.configpath);
+	const configpath_ori = params.configpath;
 	// Deflect time used to ignore rapid/quick file changes.
 	let dtime = params.dtime; // In milliseconds.
 	// Get the deflect time data type.
@@ -186,8 +161,11 @@ module.exports = function() {
 		process.exit();
 	}
 
-	// Resolve the config file path.
-	const configpath = path.resolve(process.cwd(), preppath(params.configpath));
+	let configpath = params.configpath;
+	// Get absolute path if path is relative.
+	// [https://www.stackoverflow.com/a/30450519]
+	// [http://www.linfo.org/path.html]
+	if (!path.isAbsolute(configpath)) configpath = path.resolve(configpath);
 
 	// If the file does not exist also exit.
 	if (!fe.sync(configpath)) {
@@ -198,6 +176,8 @@ module.exports = function() {
 		);
 		process.exit();
 	}
+	// Remove trailing slash from dir.
+	if (dir.endsWith("/")) dir = dir.slice(0, -1);
 
 	// Get config file contents.
 	let config = require(configpath);
