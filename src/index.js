@@ -20,6 +20,7 @@ const path = require("path");
 const chalk = require("chalk");
 const slash = require("slash");
 const notifier = require("node-notifier");
+const { tildelize } = require("./utils.js");
 
 // Get system/platform information.
 const platform = os.platform();
@@ -84,7 +85,7 @@ let handler = (filepath, stats, deflected) => {
 		name: filename,
 		dirname: filedirname
 	} = fileinfo(filepath);
-	let custom_filepath = `${filedirname}/${chalk.bold(filename)}`;
+	let custom_filepath = `${tildelize(filedirname)}/${chalk.bold(filename)}`;
 
 	// File needs to be of the allowed file extensions.
 	if (
@@ -192,6 +193,8 @@ let handler = (filepath, stats, deflected) => {
 				orig_filepath = orig_filepath.replace(/\\/g, "\\\\");
 			}
 
+			orig_filepath = tildelize(orig_filepath);
+
 			// Create error message.
 			message = `${response
 				// Replace old file path with custom file path and
@@ -219,7 +222,9 @@ let handler = (filepath, stats, deflected) => {
 				// Notification options.
 				let noptions = {
 					title: "prettier-cli-watcher",
-					message: `${filepath} format failed. ${lineinfo}`,
+					message: `${tildelize(
+						filepath
+					)} format failed. ${lineinfo}`,
 					// [https://www.flaticon.com/free-icon/warning_196759#term=error&page=1&position=16]
 					icon: path.join(__dirname, "/assets/img/warning.png")
 				};

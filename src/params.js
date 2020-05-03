@@ -11,6 +11,7 @@ const de = require("directory-exists");
 const minimist = require("minimist");
 const escapereg = require("lodash.escaperegexp");
 const { cosmiconfigSync } = require("cosmiconfig");
+const { tildelize } = require("./utils.js");
 var toml = require("toml");
 
 /**
@@ -249,7 +250,7 @@ module.exports = function () {
 
 	// Print the used flags and their values.
 	const { bold, blue, yellow, magenta } = chalk;
-	console.log(`${bold("Watching")}: ${dir}`);
+	console.log(`${bold("Watching")}: ${tildelize(dir)}`);
 	console.log(`--configpath : ${yellow(usedconfigpath)}`);
 	console.log(`--ignoredirs : ${yellow(ignoredirs.string)}`);
 	console.log(`--extensions : ${yellow(exts.join("|"))}`);
