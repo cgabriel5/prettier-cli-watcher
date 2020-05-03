@@ -247,22 +247,16 @@ module.exports = function () {
 	let tempfile = temp.openSync({ prefix: `pcw.conf-`, suffix: ".json" }).path;
 	fs.writeFileSync(tempfile, JSON.stringify(config, null, 2), "utf8");
 
-	// Get needed chalk methods.
-	const bold = chalk.bold;
-	const blue = chalk.blue;
-	const yellow = chalk.yellow;
-	const magenta = chalk.magenta;
-
 	// Print the used flags and their values.
-	console.log(`--dir="${yellow(dir)}"`);
-	console.log(`--configpath="${yellow(usedconfigpath)}"`);
-	console.log(`--ignoredirs="${yellow(ignoredirs.string)}"`);
-	console.log(`--extensions="${yellow(exts.join("|"))}"`);
-	console.log(`--watcher="${yellow(watcher)}"`);
-	console.log(`--dtime=${blue(dtime)}`);
-	console.log(`--nonotify=${magenta(nonotify || false)}`);
-	console.log(`--nolog=${magenta(nolog || false)}`);
-	console.log(chalk.bold("Watching..."));
+	const { bold, blue, yellow, magenta } = chalk;
+	console.log(`${bold("Watching")}: ${dir}`);
+	console.log(`--configpath : ${yellow(usedconfigpath)}`);
+	console.log(`--ignoredirs : ${yellow(ignoredirs.string)}`);
+	console.log(`--extensions : ${yellow(exts.join("|"))}`);
+	console.log(`--watcher    : ${yellow(watcher)}`);
+	console.log(`--dtime      : ${blue(dtime)}`);
+	console.log(`--nonotify   : ${magenta(nonotify || false)}`);
+	console.log(`--nolog      : ${magenta(nolog || false)}`);
 
 	return {
 		dir,
