@@ -125,6 +125,8 @@ module.exports = function () {
 		);
 		process.exit();
 	}
+	// Remove trailing slash from dir.
+	if (dir.endsWith("/")) dir = dir.slice(0, -1);
 
 	// If no deflect time is provided set a default.
 	if (!dtime && type_dtime !== "number") {
