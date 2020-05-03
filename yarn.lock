@@ -440,6 +440,11 @@ define-properties@^1.1.2, define-properties@^1.1.3:
   dependencies:
     object-keys "^1.0.12"
 
+directory-exists@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/directory-exists/-/directory-exists-2.0.1.tgz#7c763f1c75975c088f8f74cd669e150b7cdaf030"
+  integrity sha512-+CEod3IzwjvhQOMXFSU6nrqdTwrhzOiacNzzXlwBVFm7C4y2rbuEWs5WaRsI/3IZeSWORA5F1q8FBh3gm4HSsw==
+
 doctrine@1.5.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/doctrine/-/doctrine-1.5.0.tgz#379dce730f6166f76cefa4e6707a159b02c5a6fa"

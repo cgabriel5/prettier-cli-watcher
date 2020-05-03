@@ -7,6 +7,7 @@ const temp = require("temp");
 const chalk = require("chalk");
 const log = require("fancy-log");
 const fe = require("file-exists");
+const de = require("directory-exists");
 const minimist = require("minimist");
 const escapereg = require("lodash.escaperegexp");
 
@@ -114,6 +115,16 @@ module.exports = function() {
 	let dtime = params.dtime; // In milliseconds.
 	// Get the deflect time data type.
 	let type_dtime = dtype(dtime);
+
+	// Directory must exists.
+	if (!de.sync(dir)) {
+		console.log(
+			`[${chalk.red("error")}] ${chalk.bold(
+				"--dir"
+			)} ${chalk.bold.magenta(dir)} does not exist.`
+		);
+		process.exit();
+	}
 
 	// If no deflect time is provided set a default.
 	if (!dtime && type_dtime !== "number") {
