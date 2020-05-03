@@ -9,7 +9,7 @@ const {
 	exts,
 	nonotify,
 	nolog,
-	tmps,
+	tempfile,
 	watcher_name,
 	dtime
 } = require("./params.js")();
@@ -102,34 +102,8 @@ let handler = (filepath, stats, deflected) => {
 	// Stop listening to file changes while formatting file. [not needed?]
 	// -→ watcher.unwatch(filepath);
 
-	// Get prettier config temp file (check for extension specific config).
-	// [https://eslint.org/docs/rules/no-prototype-builtins]
-	let tmp_filepath = Object.prototype.hasOwnProperty.call(
-		tmps,
-		file_extension
-	)
-		? tmps[file_extension]
-		: tmps["*"];
-
-	// Get what prettier config was used on the file.
-	let pconfig = `${
-		tmps.__multi__
-			? ` ${
-					tmp_filepath.includes("*-")
-						? "*"
-						: tmp_filepath.match(/(?!\/)[a-z0-9]+(?=-)/)[0]
-			  }`
-			: ""
-	}`;
-
-	// If using a multi-config indicator reset the value due to Windows issue.
-	// Check note in params.js.
-	if (pconfig.trim() === "all") {
-		pconfig = " *";
-	}
-
 	// Create the child process.
-	const cprocess = child_process(filepath, tmp_filepath);
+	const cprocess = child_process(filepath, tempfile);
 	// Store process reference.
 	lookup.processes[filepath] = cprocess;
 
@@ -228,7 +202,7 @@ let handler = (filepath, stats, deflected) => {
 						lineinfo.replace(/\(|\)/g, "")
 					)} —`
 				)
-				.replace(/error/, `error${chalk(pconfig)}`)
+				.replace(/error/, `error`)
 				// Remove original line information.
 				.replace(lineinfo, "")}`;
 
@@ -266,7 +240,7 @@ let handler = (filepath, stats, deflected) => {
 			// Create success message.
 			message = `[${chalk.green(
 				"prettied"
-			)}${pconfig}] ${custom_filepath} ${duration}`;
+			)}] ${custom_filepath} ${duration}`;
 		}
 
 		// Log success/error message.

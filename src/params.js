@@ -195,19 +195,6 @@ module.exports = function () {
 			}
 			process.exit();
 		}
-	 * @return {undefined} - Nothing.
-	 */
-	let remove_parser = (conf) => {
-		delete conf.parser;
-	};
-
-	// Check if using a per-extension-file configuration file.
-	// [https://eslint.org/docs/rules/no-prototype-builtins]
-	if (Object.prototype.hasOwnProperty.call(config, "*")) {
-		remove_parser(config["*"]);
-
-		// Set flag.
-		tmps.__multi__ = true;
 	} else {
 		// Go through project for a config file.
 		const explorer = cosmiconfigSync(app, {
@@ -259,6 +246,11 @@ module.exports = function () {
 		// let rconfigpath = path.relative(process.cwd(), res.filepath);
 	}
 
+	temp.track(); // Automatically track/cleanup temp files at exit.
+	// Create temporary prettier config file.
+	let tempfile = temp.openSync({ prefix: `pcw.conf-`, suffix: ".json" }).path;
+	fs.writeFileSync(tempfile, JSON.stringify(config, null, 2), "utf8");
+
 	// Get needed chalk methods.
 	const bold = chalk.bold;
 	const blue = chalk.blue;
@@ -282,7 +274,7 @@ module.exports = function () {
 		exts,
 		nonotify,
 		nolog,
-		tmps,
+		tempfile,
 		dtime,
 		watcher_name: watcher
 	};
