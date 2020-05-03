@@ -10,6 +10,8 @@ const fe = require("file-exists");
 const de = require("directory-exists");
 const minimist = require("minimist");
 const escapereg = require("lodash.escaperegexp");
+const { cosmiconfigSync } = require("cosmiconfig");
+var toml = require("toml");
 
 /**
  * Returns the data type of the provided object.
@@ -164,43 +166,35 @@ module.exports = function () {
 		process.exit();
 	}
 
-	// If a configpath is not provided exit and warn user.
-	if (!configpath_ori) {
-		console.log(
-			`[${chalk.red("error")}] ${chalk.bold(
-				"--configpath"
-			)} is required but wasn't provided.`
-		);
-		process.exit();
-	}
-
+	const app = "prettier";
+	let config = {};
 	let configpath = params.configpath;
-	// Get absolute path if path is relative.
-	// [https://www.stackoverflow.com/a/30450519]
-	// [http://www.linfo.org/path.html]
-	if (!path.isAbsolute(configpath)) configpath = path.resolve(configpath);
-
-	// If the file does not exist also exit.
-	if (!fe.sync(configpath)) {
-		console.log(
-			`[${chalk.red("error")}] ${chalk.bold(
-				"--configpath"
-			)} ${chalk.magenta(configpath)} does not exist.`
-		);
-		process.exit();
-	}
-	// Remove trailing slash from dir.
-	if (dir.endsWith("/")) dir = dir.slice(0, -1);
-
-	// Get config file contents.
-	let config = require(configpath);
-	// Store temporary file paths for later access.
-	let tmps = {};
-
-	/**
-	 * Remove parser option. Let prettier determine correct parser.
-	 *
-	 * @param  {object} conf - The default prettier config.
+	let usedconfigpath = "";
+	if (configpath) {
+		// Get absolute path if path is relative.
+		// [https://www.stackoverflow.com/a/30450519]
+		// [http://www.linfo.org/path.html]
+		if (!path.isAbsolute(configpath)) configpath = path.resolve(configpath);
+		const explorer = cosmiconfigSync(app);
+		try {
+			config = explorer.load(configpath);
+			usedconfigpath = configpath;
+		} catch (err) {
+			if (err.syscall && err.syscall === "open") {
+				console.log(
+					`[${chalk.red(
+						"error"
+					)}] Could not find config: ${chalk.bold(configpath)}.`
+				);
+			} else {
+				console.log(
+					`[${chalk.red(
+						"error"
+					)}] Could not parse config: ${chalk.bold(configpath)}.`
+				);
+			}
+			process.exit();
+		}
 	 * @return {undefined} - Nothing.
 	 */
 	let remove_parser = (conf) => {
@@ -215,33 +209,54 @@ module.exports = function () {
 		// Set flag.
 		tmps.__multi__ = true;
 	} else {
-		// For universal config.
-		remove_parser(config);
-
-		// Normalize config.
-		config = { "*": { ...config } };
-	}
-
-	// Automatically track and cleanup temp files at exit.
-	temp.track();
-
-	// Get all extension configs.
-	let cexts = Object.keys(config);
-	// Create temp files for each extension provided.
-	for (let i = 0, l = cexts.length; i < l; i++) {
-		// Cache current loop item.
-		let cext = cexts[i];
-
-		// Create temporary prettier config file.
-		let { path: tmp_filepath } = temp.openSync({
-			// Note: "*" fails on Windows. Use "all" for file name instead.
-			prefix: `${cext === "*" ? "all" : cext}-`,
-			suffix: ".json"
+		// Go through project for a config file.
+		const explorer = cosmiconfigSync(app, {
+			searchPlaces: [
+				"package.json",
+				`.${app}rc`,
+				`configs/.${app}rc`,
+				`.${app}rc.json`,
+				`configs/.${app}rc.json`,
+				`.${app}rc.yaml`,
+				`configs/.${app}rc.yaml`,
+				`.${app}rc.yml`,
+				`configs/.${app}rc.yml`,
+				`.${app}rc.js`,
+				`configs/.${app}rc.js`,
+				`${app}.config.js`,
+				`configs/${app}.config.json`,
+				`configs/${app}.config.js`,
+				`.${app}rc.toml`,
+				`configs/.${app}rc.toml`
+			],
+			loaders: {
+				".toml": function (filepath, content) {
+					try {
+						return toml.parse(content);
+					} catch (e) {
+						console.log(
+							`[${chalk.red("error")}] ` +
+								"TOML Parsing error on line " +
+								e.line +
+								", column " +
+								e.column +
+								": " +
+								e.message
+						);
+						process.exit();
+					}
+				}
+			}
 		});
-		// Store path for later access.
-		tmps[cext] = tmp_filepath;
-		// Save prettier config to temporary file.
-		fs.writeFileSync(tmp_filepath, JSON.stringify(config[cext]), "utf8");
+		explorer.clearCaches();
+		let res = explorer.search() || {
+			config: {},
+			isEmpty: true,
+			filepath: ""
+		};
+		config = res.config;
+		usedconfigpath = res.filepath;
+		// let rconfigpath = path.relative(process.cwd(), res.filepath);
 	}
 
 	// Get needed chalk methods.
