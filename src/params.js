@@ -118,7 +118,8 @@ module.exports = function () {
 	// Get the deflect time data type.
 	let type_dtime = dtype(dtime);
 
-	// Directory must exists.
+	// Directory must exist.
+	if (!path.isAbsolute(dir)) dir = path.resolve(dir);
 	if (!de.sync(dir)) {
 		console.log(
 			`[${chalk.red("error")}] ${chalk.bold(
