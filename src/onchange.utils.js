@@ -52,14 +52,9 @@ let is_allowed_file_extension = (
 		if (!nolog) {
 			console.log(
 				`${line_sep}
-[${chalk.yellow("warn")}]`,
+[${chalk.cyan("info")}]`,
 				custom_filepath,
-				"- disallowed extension.",
-				`\n[${chalk.yellow("warn")}] ${file_extension} ${chalk.bold(
-					"NOT IN"
-				)} allowed extensions:\n[${chalk.yellow("warn")}] ${exts.join(
-					"|"
-				)}`
+				"- skipped extension."
 			);
 		}
 

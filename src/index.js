@@ -264,7 +264,7 @@ let handler = (filepath, stats, deflected) => {
 			// Get the prettier duration from original output.
 			let duration = (response.match(/(?! )(\d+)(\w+)$/) || [""])[0];
 			// Create success message.
-			message = `[${chalk.cyan(
+			message = `[${chalk.green(
 				"prettied"
 			)}${pconfig}] ${custom_filepath} ${duration}`;
 		}

@@ -183,7 +183,7 @@ module.exports = function() {
 		console.log(
 			`[${chalk.red("error")}] ${chalk.bold(
 				"--configpath"
-			)} file path ${chalk.bold.magenta(configpath)} does not exist.`
+			)} ${chalk.magenta(configpath)} does not exist.`
 		);
 		process.exit();
 	}
@@ -249,15 +249,14 @@ module.exports = function() {
 	const magenta = chalk.magenta;
 
 	// Print the used flags and their values.
-	log(`${bold("Running")} with listed setup:`);
-	log(`  ${bold("--dir")}="${yellow(dir)}"`);
-	log(`  ${bold("--configpath")}="${yellow(configpath_ori)}"`);
-	log(`  ${bold("--ignoredirs")}="${yellow(ignoredirs.string)}"`);
-	log(`  ${bold("--extensions")}="${yellow(exts.join("|"))}"`);
-	log(`  ${bold("--watcher")}="${yellow(watcher)}"`);
-	log(`  ${bold("--dtime")}=${blue(dtime)}`);
-	log(`  ${bold("--nonotify")}=${magenta(nonotify || false)}`);
-	log(`  ${bold("--nolog")}=${magenta(nolog || false)}`);
+	console.log(`${bold("--dir")}="${yellow(dir)}"`);
+	console.log(`${bold("--configpath")}="${yellow(configpath_ori)}"`);
+	console.log(`${bold("--ignoredirs")}="${yellow(ignoredirs.string)}"`);
+	console.log(`${bold("--extensions")}="${yellow(exts.join("|"))}"`);
+	console.log(`${bold("--watcher")}="${yellow(watcher)}"`);
+	console.log(`${bold("--dtime")}=${blue(dtime)}`);
+	console.log(`${bold("--nonotify")}=${magenta(nonotify || false)}`);
+	console.log(`${bold("--nolog")}=${magenta(nolog || false)}`);
 
 	return {
 		dir,
