@@ -98,9 +98,29 @@ let child_process = (filepath, tmp_filepath) => {
 		};
 	}
 
-	// Run prettier on file.
+	// Traverse parent dirs to find prettier binary.
+	let pbin = "";
+	let dirs = process.cwd();
+	const binpath = "node_modules/prettier/bin-prettier.js";
+	while (dirs !== "/") {
+		if (fe.sync(path.join(dirs, binpath))) {
+			pbin = path.join(dirs, binpath);
+			break;
+		}
+		dirs = path.dirname(dirs);
+	}
+
+	if (!pbin) {
+		console.log(
+			`[${chalk.red("error")}] Could not find local ./${chalk.bold(
+				binpath
+			)}.`
+		);
+		process.exit();
+	}
+
 	return spawn(
-		"./node_modules/prettier/bin-prettier.js",
+		pbin,
 		[
 			"--config",
 			tmp_filepath,

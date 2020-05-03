@@ -153,6 +153,12 @@ let handler = (filepath, stats, deflected) => {
 		errored = true;
 	});
 
+	// [https://stackoverflow.com/a/17749844]
+	cprocess.on("error", (data) => {
+		console.log(`[${chalk.red("error")}] Failed to run prettier.`);
+		process.exit();
+	});
+
 	cprocess.on("close", () => {
 		// Update the last change time.
 		lookup.changes[filepath] = Date.now();
