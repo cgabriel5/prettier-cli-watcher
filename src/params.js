@@ -181,19 +181,13 @@ module.exports = function () {
 			config = explorer.load(configpath);
 			usedconfigpath = configpath;
 		} catch (err) {
+			let issue = "Could not parse config";
 			if (err.syscall && err.syscall === "open") {
-				console.log(
-					`[${chalk.red(
-						"error"
-					)}] Could not find config: ${chalk.bold(configpath)}.`
-				);
-			} else {
-				console.log(
-					`[${chalk.red(
-						"error"
-					)}] Could not parse config: ${chalk.bold(configpath)}.`
-				);
+				issue = "Could not find config";
 			}
+			console.log(
+				`[${chalk.red("error")}] ${issue}: ${chalk.bold(configpath)}.`
+			);
 			process.exit();
 		}
 	} else {
