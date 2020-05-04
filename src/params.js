@@ -38,7 +38,7 @@ let dtype = function (object) {
 let toarray = (list) => list.split(/,|\|/).map((item) => item.trim());
 
 /**
- * Will return a RegExp object made from the provided ignoredirs parameter.
+ * Will return a RegExp object made from the provided ignore parameter.
  *     Will be in the format: /((dir1|dirN)\\/)/. Special characters like
  *     the dot in .git will be escaped.
  *
@@ -87,19 +87,19 @@ let dynamicreg = (array) => {
  */
 module.exports = function () {
 	const params = minimist(process.argv.slice(2));
-	const def_ignoredirs = "node_modules|bower_components|.git|dist";
+	const def_ignore = "node_modules|bower_components|.git|dist";
 	const def_exts =
 		"js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql";
 	let dir = params.dir || process.cwd();
-	const ignoredirs = dynamicreg(toarray(params.ignoredirs || def_ignoredirs));
-	const exts = toarray(params.extensions || def_exts);
-	const nonotify = params.nonotify;
-	const nolog = params.nolog;
+	const ignore = dynamicreg(toarray(params.ignore || def_ignore));
+	const exts = toarray(params.exts || def_exts);
+	const notify = params.notify || false;
+	// [https://github.com/substack/minimist/issues/123]
+	const log = !(params.log === false);
 	const watcher = params.watcher || "chokidar";
-	const configpath_ori = params.configpath;
-	// Deflect time (milliseconds) to ignore rapid file changes.
+	const configpath_ori = params.config;
 	let dtime = params.dtime;
-	let type_dtime = dtype(dtime);
+	const tdtime = dtype(dtime);
 
 	// Directory must exist.
 	if (!path.isAbsolute(dir)) dir = path.resolve(dir);
@@ -114,31 +114,8 @@ module.exports = function () {
 	// Remove trailing slash from dir.
 	if (dir.endsWith("/")) dir = dir.slice(0, -1);
 
-	// If no deflect time is provided set a default.
-	if (!dtime && type_dtime !== "number") {
-		dtime = 500;
-		type_dtime = "number";
-	}
-
-	// Check deflect time. Must be a number and positive.
-	if (type_dtime !== "number") {
-		console.log(
-			`[${chalk.red("error")}] ${chalk.bold(
-				"--dtime"
-			)} must be a number represented in milliseconds (${chalk.bold(
-				type_dtime
-			)} was provided).`
-		);
-		process.exit();
-	}
-	if (dtime < 0) {
-		console.log(
-			`[${chalk.red("error")}] ${chalk.bold(
-				"--dtime"
-			)} must be a positive number.`
-		);
-		process.exit();
-	}
+	// Reset dtime if need be.
+	if (!dtime || tdtime !== "number" || dtime < 0 || dtime > 1500) dtime = 500;
 
 	// Check if supplied file watcher is allowed.
 	if (!["chokidar", "hound"].includes(watcher)) {
@@ -154,7 +131,7 @@ module.exports = function () {
 	let config = {};
 	const app = "prettier";
 	let usedconfigpath = "";
-	let configpath = params.configpath;
+	let configpath = params.config;
 	if (configpath) {
 		// Get absolute path if path is relative.
 		// [https://www.stackoverflow.com/a/30450519]
@@ -230,23 +207,25 @@ module.exports = function () {
 	fs.writeFileSync(tempfile, JSON.stringify(config, null, 2), "utf8");
 
 	// Print the used flags and their values.
-	const { bold, blue, yellow, magenta } = chalk;
-	console.log(`${bold("Watching")}: ${tildelize(dir)}`);
-	console.log(`--configpath : ${yellow(usedconfigpath)}`);
-	console.log(`--ignoredirs : ${yellow(ignoredirs.string)}`);
-	console.log(`--extensions : ${yellow(exts.join("|"))}`);
-	console.log(`--watcher    : ${yellow(watcher)}`);
-	console.log(`--dtime      : ${blue(dtime)}`);
-	console.log(`--nonotify   : ${magenta(nonotify || false)}`);
-	console.log(`--nolog      : ${magenta(nolog || false)}`);
+	if (log) {
+		const { bold, blue, yellow, magenta } = chalk;
+		console.log(`${bold("Watching")}: ${tildelize(dir)}`);
+		console.log(`--config  : ${yellow(usedconfigpath)}`);
+		console.log(`--ignore  : ${yellow(ignore.string)}`);
+		console.log(`--exts    : ${yellow(exts.join("|"))}`);
+		console.log(`--watcher : ${yellow(watcher)}`);
+		console.log(`--dtime   : ${blue(dtime)}`);
+		console.log(`--notify  : ${magenta(notify)}`);
+		console.log(`--log     : ${magenta(log)}`);
+	}
 
 	return {
 		dir,
 		configpath,
-		ignoredirs,
+		ignore,
 		exts,
-		nonotify,
-		nolog,
+		notify,
+		log,
 		tempfile,
 		dtime,
 		watcher

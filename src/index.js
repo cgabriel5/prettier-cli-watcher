@@ -3,10 +3,10 @@
 
 const {
 	dir,
-	ignoredirs,
+	ignore,
 	exts,
-	nonotify,
-	nolog,
+	notify,
+	log,
 	tempfile,
 	watcher,
 	dtime
@@ -73,7 +73,7 @@ let handler = (filepath, stats, deflected) => {
 	let custom_filepath = `${tildelize(filedirname)}/${chalk.bold(filename)}`;
 
 	// File needs to be of the allowed file extensions.
-	if (!unallowed_ext(exts, ext, nolog, line_sep, custom_filepath)) return;
+	if (!unallowed_ext(exts, ext, log, line_sep, custom_filepath)) return;
 
 	// Stop listening to file changes while formatting file. [not needed?]
 	// -→ watcher.unwatch(filepath);
@@ -175,7 +175,7 @@ let handler = (filepath, stats, deflected) => {
 			}
 
 			// Send OS notification that prettier failed.
-			if (!nonotify) {
+			if (notify) {
 				let noptions = {
 					title: "prettier-cli-watcher",
 					message: `${tildelize(
@@ -196,9 +196,9 @@ let handler = (filepath, stats, deflected) => {
 			)}] ${custom_filepath} ${duration}`;
 		}
 
-		if (message && !nolog) console.log(`${line_sep}\n${message}`);
+		if (message && log) console.log(`${line_sep}\n${message}`);
 	});
 };
 
 // Get file watcher and only react to file modifications.
-require("./watcher.js")(dir, watcher, ignoredirs, system).on("change", handler);
+require("./watcher.js")(dir, watcher, ignore, system).on("change", handler);

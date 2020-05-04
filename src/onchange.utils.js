@@ -26,21 +26,15 @@ let fileinfo = (filepath) => ({
  *
  * @param  {array} exts - List of allowed extensions.
  * @param  {string} file_extension - The file's extension.
- * @param  {boolean} nolog - Flag indicating whether to log warning or not.
+ * @param  {boolean} log - Flag indicating whether to log warning or not.
  * @param  {string} line_sep - Logging line decoration.
  * @param  {string} custom_filepath - The custom file path to log.
  * @return {boolean} - Boolean indicating whether extension is allowed.
  */
-let unallowed_ext = (
-	exts,
-	file_extension,
-	nolog,
-	line_sep,
-	custom_filepath
-) => {
+let unallowed_ext = (exts, file_extension, log, line_sep, custom_filepath) => {
 	// Filter files not of allowed extensions.
-	if (!exts.includes(file_extension) && !nolog) {
-		if (!nolog) console.log(`${line_sep}\n[skipped]`, custom_filepath);
+	if (!exts.includes(file_extension) && log) {
+		if (log) console.log(`${line_sep}\n[skipped]`, custom_filepath);
 		return false; // Return from onChange handler.
 	}
 	return true; // File's extension is allowed.
