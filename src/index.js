@@ -1,20 +1,17 @@
 #!/usr/bin/env node
 "use strict";
 
-// Get CLI parameters.
 const {
 	dir,
-	// configpath,
 	ignoredirs,
 	exts,
 	nonotify,
 	nolog,
 	tempfile,
-	watcher_name,
+	watcher,
 	dtime
 } = require("./params.js")();
 
-// Needed modules.
 const os = require("os");
 const path = require("path");
 const chalk = require("chalk");
@@ -22,7 +19,6 @@ const slash = require("slash");
 const notifier = require("node-notifier");
 const { tildelize } = require("./utils.js");
 
-// Get system/platform information.
 const platform = os.platform();
 const system = {
 	platform,
@@ -30,16 +26,14 @@ const system = {
 	is_windows: platform === "win32"
 };
 
-// Get change event utils.
 const {
 	fileinfo,
 	child_process,
-	kill_active_process,
-	quick_deflect,
-	is_allowed_file_extension
+	kill,
+	deflect,
+	unallowed_ext
 } = require("./onchange.utils.js");
 
-// Keep track of active prettified files.
 const lookup = {
 	processes: {},
 	errors: {},
@@ -58,73 +52,44 @@ const line_sep = "-".repeat("60");
  * @return {undefined} - Nothing is returned.
  */
 let handler = (filepath, stats, deflected) => {
-	// Store original file path.
 	let orig_filepath = filepath;
 
-	// Note: Convert Windows file slahses.
-	if (system.is_windows) {
-		filepath = slash(filepath);
-	}
+	// Convert Windows file slahses.
+	if (system.is_windows) filepath = slash(filepath);
 
 	// Check for an active prettier process on the file. If one exists
 	// kill it to start a new one. Kinda like the setTimeout/clearTimeout
 	// logic. This is done as the file was saved again before the current
 	// prettier process could finish. Therefore, the old process is killed
 	// and to then start a new one.
-	kill_active_process(lookup, filepath);
+	kill(lookup, filepath);
 
 	// If many changes are made to the file in rapid succession deflect all
 	// of them and use a set timeout to only run on last change.
-	if (quick_deflect(lookup, filepath, stats, deflected, dtime, handler)) {
-		return;
-	}
+	if (deflect(lookup, filepath, stats, deflected, dtime, handler)) return;
 
 	// Get the file path information (name, dirname, etc.).
-	let {
-		ext: file_extension,
-		name: filename,
-		dirname: filedirname
-	} = fileinfo(filepath);
+	let { ext, name: filename, dirname: filedirname } = fileinfo(filepath);
 	let custom_filepath = `${tildelize(filedirname)}/${chalk.bold(filename)}`;
 
 	// File needs to be of the allowed file extensions.
-	if (
-		!is_allowed_file_extension(
-			exts,
-			file_extension,
-			nolog,
-			line_sep,
-			custom_filepath
-		)
-	) {
-		return;
-	}
+	if (!unallowed_ext(exts, ext, nolog, line_sep, custom_filepath)) return;
 
 	// Stop listening to file changes while formatting file. [not needed?]
 	// -→ watcher.unwatch(filepath);
 
-	// Create the child process.
 	const cprocess = child_process(filepath, tempfile);
-	// Store process reference.
 	lookup.processes[filepath] = cprocess;
 
-	// Cache child spawn output.
 	let res = "";
-	// Child spawn error status flag.
 	let errored = true;
 
-	// -- Process Events --//
-
 	cprocess.stdout.on("data", (data) => {
-		// Capture output for later use.
 		res = data;
-		// Reset flag.
 		errored = false;
 	});
 	cprocess.stderr.on("data", (data) => {
-		// Capture output for later use.
 		res = data;
-		// Reset flag.
 		errored = true;
 	});
 
@@ -135,18 +100,14 @@ let handler = (filepath, stats, deflected) => {
 	});
 
 	cprocess.on("close", () => {
-		// Update the last change time.
+		// Update last change time.
 		lookup.changes[filepath] = Date.now();
 
-		// If the process was killed manually do not continue with
-		// logging/notification logic.
+		// Stop logging/notification logic if process was killed manually.
 		if (cprocess.__killed_off__) {
 			return;
 		} else {
-			// Set a custom property denote process completed.
 			cprocess.__completed__ = true;
-
-			// With process completed do some cleanup.
 			delete lookup.processes[filepath];
 		}
 
@@ -155,12 +116,9 @@ let handler = (filepath, stats, deflected) => {
 
 		// Stringify and cleanup response.
 		let response = res.toString().trim();
-
-		// Log message to print.
 		let message;
 
 		if (errored) {
-			// Get line information.
 			let lineinfo = (response.match(/(?! )\((\d+:\d+)\)$/m) || [""])[0];
 
 			// Check if previous error exists.
@@ -177,7 +135,6 @@ let handler = (filepath, stats, deflected) => {
 				) {
 					// Update the time.
 					last_error.time = Date.now();
-
 					return;
 				}
 			}
@@ -189,7 +146,7 @@ let handler = (filepath, stats, deflected) => {
 			orig_filepath = orig_filepath.replace(/^\.\//, "");
 			// Prep dynamic RegExp for Windows.
 			if (system.is_windows) {
-				// Add extra forward slahes so dynamic RegExp works on Windows.
+				// Add extra forward slashes so dynamic RegExp works on Windows.
 				orig_filepath = orig_filepath.replace(/\\/g, "\\\\");
 			}
 
@@ -219,7 +176,6 @@ let handler = (filepath, stats, deflected) => {
 
 			// Send OS notification that prettier failed.
 			if (!nonotify) {
-				// Notification options.
 				let noptions = {
 					title: "prettier-cli-watcher",
 					message: `${tildelize(
@@ -228,35 +184,21 @@ let handler = (filepath, stats, deflected) => {
 					// [https://www.flaticon.com/free-icon/warning_196759#term=error&page=1&position=16]
 					icon: path.join(__dirname, "/assets/img/warning.png")
 				};
-				// Add close action button for macOS.
-				if (system.is_macos) {
-					noptions.actions = "Close";
-				}
-
-				// Send notification.
+				if (system.is_macos) noptions.actions = "Close"; // macOS close button.
 				notifier.notify(noptions);
 			}
 		} else {
-			// Remove error information.
 			delete lookup.errors[filepath];
 
-			// Get the prettier duration from original output.
 			let duration = (response.match(/(?! )(\d+)(\w+)$/) || [""])[0];
-			// Create success message.
 			message = `[${chalk.green(
 				"prettied"
 			)}] ${custom_filepath} ${duration}`;
 		}
 
-		// Log success/error message.
-		if (message && !nolog) {
-			console.log(`${line_sep}\n${message}`);
-		}
+		if (message && !nolog) console.log(`${line_sep}\n${message}`);
 	});
 };
 
 // Get file watcher and only react to file modifications.
-require("./watcher.js")(dir, watcher_name, ignoredirs, system).on(
-	"change",
-	handler
-);
+require("./watcher.js")(dir, watcher, ignoredirs, system).on("change", handler);

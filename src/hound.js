@@ -112,9 +112,7 @@ Hound.prototype.watch = function (src) {
 	let { ignored, /*extensions, extcheck,*/ system } = self.options;
 
 	// Ignore paths containing ignore dirs.
-	if (ignoredirs(src, ignored, system)) {
-		return;
-	}
+	if (ignoredirs(src, ignored, system)) return;
 
 	var stats = fs.statSync(src);
 	var lastChange = null;
@@ -122,13 +120,9 @@ Hound.prototype.watch = function (src) {
 	if (stats.isDirectory()) {
 		var files = fs.readdirSync(src);
 		for (var i = 0, len = files.length; i < len; i++) {
-			// Cache current file path.
-			let file = files[i];
-			// Create path.
-			let p = path.join(src, file);
-			if (ignoredirs(p, ignored, system)) {
-				continue;
-			}
+			let file = files[i]; // Cache current file path.
+			let p = path.join(src, file); // Create path.
+			if (ignoredirs(p, ignored, system)) continue;
 			self.watch(src + path.sep + file);
 		}
 	}

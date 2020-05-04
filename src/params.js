@@ -1,9 +1,9 @@
 "use strict";
 
-// Needed modules.
 const fs = require("fs");
 const path = require("path");
 const temp = require("temp");
+const toml = require("toml");
 const chalk = require("chalk");
 const log = require("fancy-log");
 const fe = require("file-exists");
@@ -12,7 +12,6 @@ const minimist = require("minimist");
 const escapereg = require("lodash.escaperegexp");
 const { cosmiconfigSync } = require("cosmiconfig");
 const { tildelize } = require("./utils.js");
-var toml = require("toml");
 
 /**
  * Returns the data type of the provided object.
@@ -31,17 +30,12 @@ let dtype = function (object) {
 };
 
 /**
- * Converts a comma/pipe delimited string list into an array. Trims items
- *     as well.
+ * Converts a comma/pipe delimited string into an array.
  *
  * @param  {string} list - The list to convert to array.
  * @return {array} - The array.
  */
-let toarray = (list) => {
-	return list.split(/,|\|/).map((item) => {
-		return item.trim();
-	});
-};
+let toarray = (list) => list.split(/,|\|/).map((item) => item.trim());
 
 /**
  * Will return a RegExp object made from the provided ignoredirs parameter.
@@ -92,31 +86,19 @@ let dynamicreg = (array) => {
  * @return {object} - Object containing parameters and their values.
  */
 module.exports = function () {
-	// Parse/get parameters.
 	const params = minimist(process.argv.slice(2));
-
-	// Default ignored directories.
 	const def_ignoredirs = "node_modules|bower_components|.git|dist";
-	// Default allowed file extensions.
 	const def_exts =
 		"js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql";
-
-	// Directory to watch.
 	let dir = params.dir || process.cwd();
-
-	// Directories to ignore.
 	const ignoredirs = dynamicreg(toarray(params.ignoredirs || def_ignoredirs));
 	const exts = toarray(params.extensions || def_exts);
-	// Don't send OS notification when prettier fails formatting file?
 	const nonotify = params.nonotify;
-	// Don't log error/success output to terminal?
 	const nolog = params.nolog;
-	// Default file watcher to chokidar.
 	const watcher = params.watcher || "chokidar";
 	const configpath_ori = params.configpath;
-	// Deflect time used to ignore rapid/quick file changes.
-	let dtime = params.dtime; // In milliseconds.
-	// Get the deflect time data type.
+	// Deflect time (milliseconds) to ignore rapid file changes.
+	let dtime = params.dtime;
 	let type_dtime = dtype(dtime);
 
 	// Directory must exist.
@@ -244,7 +226,6 @@ module.exports = function () {
 	}
 
 	temp.track(); // Automatically track/cleanup temp files at exit.
-	// Create temporary prettier config file.
 	let tempfile = temp.openSync({ prefix: `pcw.conf-`, suffix: ".json" }).path;
 	fs.writeFileSync(tempfile, JSON.stringify(config, null, 2), "utf8");
 
@@ -268,6 +249,6 @@ module.exports = function () {
 		nolog,
 		tempfile,
 		dtime,
-		watcher_name: watcher
+		watcher
 	};
 };

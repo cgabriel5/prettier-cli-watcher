@@ -1,12 +1,11 @@
 "use strict";
 
-// Needed modules.
 const os = require("os");
 const path = require("path");
 const chalk = require("chalk");
+const fe = require("file-exists");
 const ext = require("file-extension");
 const de = require("directory-exists");
-const fe = require("file-exists");
 const spawn = require("cross-spawn-with-kill");
 
 /**
@@ -15,20 +14,12 @@ const spawn = require("cross-spawn-with-kill");
  * @param  {string} filepath - The complete file path.
  * @return {object} - Object containing file path components.
  */
-let fileinfo = (filepath) => {
-	// Get file extension.
-	let extension = ext(filepath);
-	// Get file name and directory path.
-	let name = path.basename(filepath);
-	let dirname = path.dirname(filepath);
-
-	return {
-		name,
-		dirname,
-		ext: extension,
-		path: filepath
-	};
-};
+let fileinfo = (filepath) => ({
+	name: path.basename(filepath),
+	dirname: path.dirname(filepath),
+	ext: ext(filepath),
+	path: filepath
+});
 
 /**
  * Checks whether the file's extension is allowed.
@@ -40,7 +31,7 @@ let fileinfo = (filepath) => {
  * @param  {string} custom_filepath - The custom file path to log.
  * @return {boolean} - Boolean indicating whether extension is allowed.
  */
-let is_allowed_file_extension = (
+let unallowed_ext = (
 	exts,
 	file_extension,
 	nolog,
@@ -49,21 +40,10 @@ let is_allowed_file_extension = (
 ) => {
 	// Filter files not of allowed extensions.
 	if (!exts.includes(file_extension) && !nolog) {
-		if (!nolog) {
-			console.log(
-				`${line_sep}
-[${chalk.cyan("info")}]`,
-				custom_filepath,
-				"- skipped extension."
-			);
-		}
-
-		// Return from onChange handelr.
-		return false;
+		if (!nolog) console.log(`${line_sep}\n[skipped]`, custom_filepath);
+		return false; // Return from onChange handler.
 	}
-
-	// File's extension is allowed.
-	return true;
+	return true; // File's extension is allowed.
 };
 
 /**
@@ -74,24 +54,15 @@ let is_allowed_file_extension = (
  * @return {object} - The spawned child process.
  */
 let child_process = (filepath, tmp_filepath) => {
-	// Child spawn options.
 	// [https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options]
-	let options = {
-		stdio: "pipe"
-	};
+	let options = { stdio: "pipe" };
 
 	// For Linux only force terminal output to maintain colors. Adding this
-	// to macOS for example causes it to choke and not run. To be specific,
-	// I get this error on macOS when the env option is supplied:
+	// to macOS for example causes it to choke and not run. Giving the error:
 	// "env: node: No such file or directory".
 	// [https://nodejs.org/api/os.html#os_os_platform]
-	if (os.platform() === "linux") {
-		options.env = {
-			// Preserve terminal colors:
-			// [https://stackoverflow.com/a/43375301]
-			FORCE_COLOR: true
-		};
-	}
+	// Preserve terminal colors: [https://stackoverflow.com/a/43375301]
+	if (os.platform() === "linux") options.env = { FORCE_COLOR: true };
 
 	// Traverse parent dirs to find prettier binary.
 	let pbin = "";
@@ -141,15 +112,12 @@ let child_process = (filepath, tmp_filepath) => {
  * @return {boolean} - Boolean indicating whether change event should be
  *     deflected.
  */
-let quick_deflect = (lookup, filepath, stats, deflected, dtime, handler) => {
-	// Note: A dtime value of 0 skips deflection logic check.
-	if (!dtime) {
-		return false;
-	}
+let deflect = (lookup, filepath, stats, deflected, dtime, handler) => {
+	// dtime value of 0 skips deflection logic check.
+	if (!dtime) return false;
 
 	// Get last recorded change on the modified file.
 	let last_change = lookup.changes[filepath];
-	// Get file's modified time.
 	let mtime = stats.mtime.getTime();
 	// If a last recorded time and it is not a quick deflection...
 	if (last_change && !deflected) {
@@ -184,23 +152,14 @@ let quick_deflect = (lookup, filepath, stats, deflected, dtime, handler) => {
  * @param  {string} filepath - The file path of the modified file.
  * @return {undefined} - Nothing is returned.
  */
-let kill_active_process = (lookup, filepath) => {
+let kill = (lookup, filepath) => {
 	// Look for a running process on the file.
 	let __active_process__ = lookup.processes[filepath];
-
-	// Only kill process if still active AND not already completed.
+	// Kill if active and not already completed.
 	if (__active_process__ && !__active_process__.__completed__) {
-		// Attach custom property for later use.
 		__active_process__.__killed_off__ = true;
-		// Finally, kill process.
 		__active_process__.kill();
 	}
 };
 
-module.exports = {
-	fileinfo,
-	child_process,
-	quick_deflect,
-	kill_active_process,
-	is_allowed_file_extension
-};
+module.exports = { fileinfo, child_process, deflect, kill, unallowed_ext };
