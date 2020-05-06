@@ -43,8 +43,6 @@ module.exports = function () {
 	const watcher = params.watcher || "chokidar";
 	const configpath_ori = params.config;
 	let ignorepath = params["ignore-path"];
-	let dtime = params.deflect;
-	if (!dtime || dtype(dtime) !== "number" || dtime < 0) dtime = 500;
 	const setup = params.setup;
 
 	// Directory must exist.
@@ -191,7 +189,6 @@ module.exports = function () {
 		console.log(`ignore : ${usedignorepath}`);
 		// console.log(`ignore  : ${globs.join(" ; ")}`);
 		// console.log(`watcher : ${watcher}`);
-		// console.log(`deflect : ${blue(dtime)}`);
 		console.log(`notify : ${magenta(notify)}`);
 		console.log(` quiet : ${magenta(log)}`);
 		// console.log(`${sep}`);
@@ -212,7 +209,6 @@ module.exports = function () {
 		config: tempfile,
 		ignore: ignorepath,
 		watcher,
-		dtime,
 		globs
 	};
 };
