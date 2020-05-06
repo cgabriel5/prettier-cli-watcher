@@ -11,8 +11,8 @@ const notifier = require("node-notifier");
 
 const params = require("./params.js")();
 const { dir, notify, log, config, ignore, watcher, globs } = params;
-const { tildelize, system } = require("./utils.js");
 const { child, kill } = require("./onchange.utils.js");
+const { error, tildelize, system } = require("./utils.js");
 
 const sep = "-".repeat("60");
 const lookup = { processes: {}, errors: {}, timeouts: {} };
@@ -45,8 +45,7 @@ let handler = (file, stats) => {
 	});
 	// [https://stackoverflow.com/a/17749844]
 	proc.on("error", (data) => {
-		console.log(`[${chalk.red("error")}] Failed to run prettier.`);
-		process.exit();
+		error("Failed to run prettier.");
 	});
 	// [https://link.medium.com/MYwtjYvag6]
 	proc.on("close", (code, signal) => {

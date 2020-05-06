@@ -10,7 +10,7 @@ const nodeignore = require("ignore");
 const ext = require("file-extension");
 const treekill = require("tree-kill");
 const de = require("directory-exists");
-const { system } = require("./utils.js");
+const { error, system } = require("./utils.js");
 const spawn = require("cross-spawn-with-kill");
 
 /**
@@ -71,14 +71,7 @@ let child = (filepath, config, ignore) => {
 		dirs = path.dirname(dirs);
 	}
 
-	if (!pbin) {
-		console.log(
-			`[${chalk.red("error")}] Could not find local ./${chalk.bold(
-				binpath
-			)}.`
-		);
-		process.exit();
-	}
+	if (!pbin) error(`Could not find local ./${binpath}.`);
 
 	let opts = ["--config", config, "--write"];
 	// [https://prettier.io/docs/en/cli.html#--ignore-path]

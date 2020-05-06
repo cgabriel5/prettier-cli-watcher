@@ -13,7 +13,7 @@ const de = require("directory-exists");
 const parseignore = require("parse-gitignore");
 const escapereg = require("lodash.escaperegexp");
 const { cosmiconfigSync } = require("cosmiconfig");
-const { dtype, tildelize } = require("./utils.js");
+const { error, dtype, tildelize } = require("./utils.js");
 
 /**
  * Get and parse CLI parameters.
@@ -42,14 +42,7 @@ module.exports = function () {
 
 	// Directory must exist.
 	if (!path.isAbsolute(dir)) dir = path.resolve(dir);
-	if (!de.sync(dir)) {
-		console.log(
-			`[${chalk.red("error")}] ${chalk.bold(
-				"--dir"
-			)} ${chalk.bold.magenta(dir)} does not exist.`
-		);
-		process.exit();
-	}
+	if (!de.sync(dir)) error(`--dir ${dir} doesn't exist.`);
 
 	// Check if supplied file watcher is allowed.
 	if (!["chokidar", "hound"].includes(watcher)) watcher = "chokidar";
@@ -68,14 +61,9 @@ module.exports = function () {
 		try {
 			res = explorer.load(configpath);
 		} catch (err) {
-			let issue = "Could not parse config";
-			if (err.syscall && err.syscall === "open") {
-				issue = "Could not find config";
-			}
-			console.log(
-				`[${chalk.red("error")}] ${issue}: ${chalk.bold(configpath)}.`
-			);
-			process.exit();
+			let issue = "parse config";
+			if (err.syscall && err.syscall === "open") issue = "find config";
+			error(`Couldn't ${issue}: ${configpath}.`);
 		}
 	} else {
 		// Go through project for a config file.
@@ -103,16 +91,9 @@ module.exports = function () {
 					try {
 						return toml.parse(content);
 					} catch (e) {
-						console.log(
-							`[${chalk.red("error")}] ` +
-								"TOML Parsing error on line " +
-								e.line +
-								", column " +
-								e.column +
-								": " +
-								e.message
-						);
-						process.exit();
+						let msg = "TOML parsing error:";
+						let line = `${e.line}:${e.column}`;
+						error(`${msg} ${line} ${e.message}`);
 					}
 				}
 			}
@@ -128,13 +109,7 @@ module.exports = function () {
 	let usedignorepath = "";
 	if (ignorepath) {
 		if (!path.isAbsolute(ignorepath)) ignorepath = path.resolve(ignorepath);
-		if (!fe.sync(ignorepath)) {
-			let issue = "Could not open ";
-			console.log(
-				`[${chalk.red("error")}] ${issue}: ${chalk.bold(ignorepath)}.`
-			);
-			process.exit();
-		}
+		if (!fe.sync(ignorepath)) error(`Couldn't open: ${ignorepath}.`);
 		ignorecontents = fs.readFileSync(ignorepath, "utf8");
 		usedignorepath = ignorepath;
 	} else {

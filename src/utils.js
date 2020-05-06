@@ -1,6 +1,7 @@
 "use strict";
 
 const os = require("os");
+const chalk = require("chalk");
 
 /**
  * Returns the data type of the provided object.
@@ -33,4 +34,15 @@ let tildelize = (p) => {
 const uos = os.platform();
 let system = () => ({ mac: uos === "darwin", win: uos === "win32" });
 
-module.exports = { dtype, tildelize, system };
+/**
+ * Prints error and exists process.
+ *
+ * @param  {string} msg - The error message.
+ * @return {undefined} - Nothing is returned.
+ */
+let error = (msg) => {
+	console.log(`[${chalk.red("error")}] ${msg}`);
+	process.exit();
+};
+
+module.exports = { error, dtype, tildelize, system };
