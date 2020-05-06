@@ -2,19 +2,15 @@
 
 "use strict";
 
-const fs = require("fs");
-const glob = require("glob");
 const path = require("path");
 const chalk = require("chalk");
 const slash = require("slash");
 const notifier = require("node-notifier");
 
 const params = require("./params.js")();
-const { dir, notify, log, config, ignore, watcher, globs } = params;
+const { dir, notify, log, tconfig, tignore, watcher, globs } = params;
 const { child, kill } = require("./onchange.utils.js");
-const { error, tildelize, system } = require("./utils.js");
-
-const sep = "-".repeat("60");
+const { sep, error, tildelize, system } = require("./utils.js");
 const lookup = { processes: {}, errors: {}, timeouts: {} };
 
 /**
@@ -24,12 +20,12 @@ const lookup = { processes: {}, errors: {}, timeouts: {} };
  * @param  {object} stats - Modified file's stats.
  * @return {undefined} - Nothing is returned.
  */
-let handler = (file, stats) => {
+let handler = (file /*, stats*/) => {
 	if (system.win) file = slash(file);
 
 	kill(lookup, file);
 
-	const proc = child(file, config, ignore);
+	const proc = child(file, tconfig, tignore);
 	if (!lookup.processes[file]) lookup.processes[file] = [];
 	lookup.processes[file].push(proc);
 
@@ -44,7 +40,7 @@ let handler = (file, stats) => {
 		err = true;
 	});
 	// [https://stackoverflow.com/a/17749844]
-	proc.on("error", (data) => {
+	proc.on("error", () => {
 		error("Failed to run prettier.");
 	});
 	// [https://link.medium.com/MYwtjYvag6]

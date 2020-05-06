@@ -3,13 +3,9 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const chalk = require("chalk");
 const upath = require("upath");
 const fe = require("file-exists");
-const nodeignore = require("ignore");
-const ext = require("file-extension");
 const treekill = require("tree-kill");
-const de = require("directory-exists");
 const { error, system } = require("./utils.js");
 const spawn = require("cross-spawn-with-kill");
 

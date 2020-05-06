@@ -7,55 +7,37 @@ const toml = require("toml");
 const chalk = require("chalk");
 const log = require("fancy-log");
 const fe = require("file-exists");
-const dirglob = require("dir-glob");
 const minimist = require("minimist");
 const de = require("directory-exists");
 const parseignore = require("parse-gitignore");
-const escapereg = require("lodash.escaperegexp");
 const { cosmiconfigSync } = require("cosmiconfig");
-const { error, dtype, tildelize } = require("./utils.js");
+const { sep, error, relativize, tildelize } = require("./utils.js");
 
-/**
- * Get and parse CLI parameters.
- *
- * @return {object} - Object containing parameters and their values.
- */
 module.exports = function () {
 	const params = minimist(process.argv.slice(2));
 
-	let defdir = process.cwd();
-	let dir = params.dir || defdir;
-	if (dir && dir === true) dir = defdir;
-	if (dir === "." || dir === "./") dir = defdir;
+	let cwd = process.cwd();
+	let dir = params.dir || cwd;
+	if (dir && dir === true) dir = cwd;
+	if (dir === "." || dir === "./") dir = cwd;
 	if (dir.endsWith("/")) dir = dir.slice(0, -1);
 
 	let globs = [];
-	let ignorepath = params.ignore;
+	const app = "prettier";
+	let configpath = params.config || "";
+	let ignorepath = params.ignore || "";
 
-	const notify = params.notify || false;
-	// [https://github.com/substack/minimist/issues/123]
-	// const log = !(params.log === false);
-	const log = params.quiet || false;
-	const watcher = params.watcher || "chokidar";
-	const configpath_ori = params.config;
 	const setup = params.setup;
+	const log = params.quiet || false;
+	const notify = params.notify || false;
+	let watcher = params.watcher || "chokidar";
 
-	// Directory must exist.
 	if (!path.isAbsolute(dir)) dir = path.resolve(dir);
 	if (!de.sync(dir)) error(`--dir ${dir} doesn't exist.`);
-
-	// Check if supplied file watcher is allowed.
 	if (!["chokidar", "hound"].includes(watcher)) watcher = "chokidar";
 
 	let res = {};
-	let config = {};
-	const app = "prettier";
-	let usedconfigpath = "";
-	let configpath = params.config;
 	if (configpath) {
-		// Get absolute path if path is relative.
-		// [https://www.stackoverflow.com/a/30450519]
-		// [http://www.linfo.org/path.html]
 		if (!path.isAbsolute(configpath)) configpath = path.resolve(configpath);
 		const explorer = cosmiconfigSync(app);
 		try {
@@ -66,7 +48,6 @@ module.exports = function () {
 			error(`Couldn't ${issue}: ${configpath}.`);
 		}
 	} else {
-		// Go through project for a config file.
 		const explorer = cosmiconfigSync(app, {
 			searchPlaces: [
 				"package.json",
@@ -101,69 +82,47 @@ module.exports = function () {
 		explorer.clearCaches();
 		res = explorer.search() || { config: {}, isEmpty: true, filepath: "" };
 	}
+	let config = res.config;
+	configpath = res.filepath;
 
-	config = res.config;
-	usedconfigpath = res.filepath;
-
+	let tignore = "";
 	let ignorecontents = "";
-	let usedignorepath = "";
 	if (ignorepath) {
 		if (!path.isAbsolute(ignorepath)) ignorepath = path.resolve(ignorepath);
 		if (!fe.sync(ignorepath)) error(`Couldn't open: ${ignorepath}.`);
 		ignorecontents = fs.readFileSync(ignorepath, "utf8");
-		usedignorepath = ignorepath;
 	} else {
 		const exp = cosmiconfigSync(app, {
 			searchPlaces: [`.${app}ignore`, `configs/${app}ignore`],
 			loaders: { noExt: (filepath, content) => content }
 		});
 		exp.clearCaches();
-		let igres = exp.search() || { config: "", isEmpty: true, filepath: "" };
-		ignorecontents = igres.config;
-		ignorepath = igres.filepath;
-		usedignorepath = ignorepath;
+		let res = exp.search() || { config: "", isEmpty: true, filepath: "" };
+		ignorecontents = res.config;
+		ignorepath = res.filepath;
 	}
 
-	// If config file is relative to watch dir, make path relative.
-	if (usedignorepath.startsWith(process.cwd())) {
-		usedignorepath = "./" + path.relative(process.cwd(), usedignorepath);
+	temp.track();
+	let tconfig = temp.openSync({ prefix: `pcw.conf-`, suffix: ".json" }).path;
+	fs.writeFileSync(tconfig, JSON.stringify(config, null, 2), "utf8");
+
+	if (ignorepath) {
+		tignore = temp.openSync({ prefix: `pcw.ig-`, suffix: ".ignore" }).path;
+		fs.writeFileSync(tignore, ignorecontents, "utf8");
+		globs = parseignore(ignorecontents).concat(globs);
 	}
 
-	// If config file is relative to watch dir, make path relative.
-	if (usedconfigpath.startsWith(process.cwd())) {
-		usedconfigpath = "./" + path.relative(process.cwd(), usedconfigpath);
-	}
-
-	// res.isEmpty = true;
-
-	temp.track(); // Automatically track/cleanup temp files at exit.
-	let tempfile = temp.openSync({ prefix: `pcw.conf-`, suffix: ".json" }).path;
-	fs.writeFileSync(tempfile, JSON.stringify(config, null, 2), "utf8");
-
-	if (usedignorepath) {
-		ignorepath = temp.openSync({ prefix: `pcw.ig-`, suffix: ".ig" }).path;
-		fs.writeFileSync(ignorepath, ignorecontents, "utf8");
-
-		let ignores = parseignore(ignorecontents);
-		if (ignores) globs = ignores.concat(dirglob.sync(globs));
-	}
-
-	// Print the used flags and their values.
-	const sep = "-".repeat("60");
 	if (setup) {
 		console.log(`${sep}`);
-		const { bold, blue, yellow, magenta } = chalk;
+		const { bold, magenta } = chalk;
 		console.log(`   dir : ${bold(tildelize(dir))}`);
-		if (res.isEmpty) usedconfigpath = "<prettier-defaults>";
-		console.log(`config : ${usedconfigpath}`);
-		console.log(`ignore : ${usedignorepath}`);
-		// console.log(`watcher : ${watcher}`);
+		if (res.isEmpty) configpath = "<prettier-defaults>";
+		console.log(`config : ${relativize(configpath)}`);
+		console.log(`ignore : ${relativize(ignorepath)}`);
 		console.log(`notify : ${magenta(notify)}`);
 		console.log(` quiet : ${magenta(log)}`);
-		// console.log(`${sep}`);
 	}
 
-	// Warn when config file was not found.
 	if (res.isEmpty) {
 		let msg = "Config file not found — using prettier defaults.";
 		msg = `[${chalk.yellow("warn")}] ${msg}`;
@@ -171,13 +130,5 @@ module.exports = function () {
 		console.log(msg);
 	}
 
-	return {
-		dir,
-		notify,
-		log,
-		config: tempfile,
-		ignore: ignorepath,
-		watcher,
-		globs
-	};
+	return { dir, notify, log, tconfig, tignore, watcher, globs };
 };
