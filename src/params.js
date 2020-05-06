@@ -8,12 +8,12 @@ const chalk = require("chalk");
 const log = require("fancy-log");
 const fe = require("file-exists");
 const dirglob = require("dir-glob");
-const de = require("directory-exists");
 const minimist = require("minimist");
+const de = require("directory-exists");
+const parseignore = require("parse-gitignore");
 const escapereg = require("lodash.escaperegexp");
 const { cosmiconfigSync } = require("cosmiconfig");
 const { dtype, tildelize } = require("./utils.js");
-const parseignore = require("parse-gitignore");
 
 /**
  * Get and parse CLI parameters.
@@ -23,18 +23,14 @@ const parseignore = require("parse-gitignore");
 module.exports = function () {
 	const params = minimist(process.argv.slice(2));
 
-	const g = params.ignore;
-	let globs = g || [];
-	if (globs.length) {
-		globs = typeof g === "string" ? [g] : g;
-		globs = dirglob.sync(globs);
-	}
-
 	let defdir = process.cwd();
 	let dir = params.dir || defdir;
 	if (dir && dir === true) dir = defdir;
 	if (dir === "." || dir === "./") dir = defdir;
 	if (dir.endsWith("/")) dir = dir.slice(0, -1);
+
+	let globs = [];
+	let ignorepath = params.ignore;
 
 	const notify = params.notify || false;
 	// [https://github.com/substack/minimist/issues/123]
@@ -42,7 +38,6 @@ module.exports = function () {
 	const log = params.quiet || false;
 	const watcher = params.watcher || "chokidar";
 	const configpath_ori = params.config;
-	let ignorepath = params["ignore-path"];
 	const setup = params.setup;
 
 	// Directory must exist.
@@ -187,7 +182,6 @@ module.exports = function () {
 		if (res.isEmpty) usedconfigpath = "<prettier-defaults>";
 		console.log(`config : ${usedconfigpath}`);
 		console.log(`ignore : ${usedignorepath}`);
-		// console.log(`ignore  : ${globs.join(" ; ")}`);
 		// console.log(`watcher : ${watcher}`);
 		console.log(`notify : ${magenta(notify)}`);
 		console.log(` quiet : ${magenta(log)}`);
