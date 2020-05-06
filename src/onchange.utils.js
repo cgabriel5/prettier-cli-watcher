@@ -1,53 +1,54 @@
 "use strict";
 
+const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const chalk = require("chalk");
+const upath = require("upath");
 const fe = require("file-exists");
+const nodeignore = require("ignore");
 const ext = require("file-extension");
+const treekill = require("tree-kill");
 const de = require("directory-exists");
+const { system } = require("./utils.js");
 const spawn = require("cross-spawn-with-kill");
 
 /**
- * Get file path information (i.e. file name and directory path).
+ * Determines whether user needs to ignore path.
  *
- * @param  {string} filepath - The complete file path.
- * @return {object} - Object containing file path components.
+ * @param  {string} p - The file path.
+ * @param  {array} globs - The globs to test against.
+ * @return {boolean} - Boolean indicating whether to ignore or not.
  */
-let fileinfo = (filepath) => ({
-	name: path.basename(filepath),
-	dirname: path.dirname(filepath),
-	ext: ext(filepath),
-	path: filepath
-});
 
-/**
- * Checks whether the file's extension is allowed.
- *
- * @param  {array} exts - List of allowed extensions.
- * @param  {string} file_extension - The file's extension.
- * @param  {boolean} log - Flag indicating whether to log warning or not.
- * @param  {string} line_sep - Logging line decoration.
- * @param  {string} custom_filepath - The custom file path to log.
- * @return {boolean} - Boolean indicating whether extension is allowed.
- */
-let unallowed_ext = (exts, file_extension, log, line_sep, custom_filepath) => {
-	// Filter files not of allowed extensions.
-	if (!exts.includes(file_extension) && log) {
-		if (log) console.log(`${line_sep}\n[skipped]`, custom_filepath);
-		return false; // Return from onChange handler.
-	}
-	return true; // File's extension is allowed.
+let ignore = (p, ig) => {
+	if (system.windows) p = upath.normalizeSafe(p);
+	let file = path.relative(process.cwd(), p);
+	if (system.windows) file = upath.normalizeSafe(file);
+	let res = false;
+
+	// Use try/catch in case path no longer exists.
+	try {
+		if (fs.statSync(p).isDirectory() && !file.endsWith("/")) file += "/";
+		let test = ig.ignores(file);
+		if (test && !ignore.lookup[file]) {
+			ignore.lookup[file] = true;
+			// console.log(`[${chalk.cyan("ignored")}] ${file}`);
+		}
+		res = test;
+	} catch {}
+	return res;
 };
+ignore.lookup = {}; // Track ignored files.
 
 /**
  * Create the prettier process on file.
  *
  * @param  {string} filepath - The modified file's path.
- * @param  {string} tmp_filepath - Temporary file path of the prettier config.
+ * @param  {string} config - Path to temporary prettier config file.
  * @return {object} - The spawned child process.
  */
-let child_process = (filepath, tmp_filepath) => {
+let child = (filepath, config, ignore) => {
 	// [https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options]
 	let options = { stdio: "pipe" };
 
@@ -79,81 +80,34 @@ let child_process = (filepath, tmp_filepath) => {
 		process.exit();
 	}
 
-	return spawn(
-		pbin,
-		[
-			"--config",
-			tmp_filepath,
-			// "--loglevel",
-			// "silent",
-			"--write",
-			filepath
-		],
-		options
-	);
-};
-
-/**
- * Quick file change deflection logic (deflects rapid changes made to file).
- *
- * @param  {object} lookup - The lookup db object.
- * @param  {string} filepath - The file path of the modified file.
- * @param  {object} stats - The file stats object.
- * @param  {boolean} deflected - Boolean indicating whether last change
- *     event was deflected.
- * @param  {number} dtime - The time that must pass to not perceive
- *     change event as a rapid/quick change.
- * @return {boolean} - Boolean indicating whether change event should be
- *     deflected.
- */
-let deflect = (lookup, filepath, stats, deflected, dtime, handler) => {
-	// dtime value of 0 skips deflection logic check.
-	if (!dtime) return false;
-
-	// Get last recorded change on the modified file.
-	let last_change = lookup.changes[filepath];
-	let mtime = stats.mtime.getTime();
-	// If a last recorded time and it is not a quick deflection...
-	if (last_change && !deflected) {
-		// Calculate difference between last recorded and file modified time.
-		let last_change_time_diff = mtime - last_change;
-		// If the time difference is less than allowed deflect time the
-		// change was performed to close to the last change to clear
-		// the last set timeout.
-		if (last_change_time_diff < dtime) {
-			if (lookup.timeouts[filepath]) {
-				clearTimeout(lookup.timeouts[filepath]);
-				delete lookup.timeouts[filepath];
-			}
-			// If the time difference is negative don't create new timeout.
-			if (last_change_time_diff >= 0) {
-				lookup.timeouts[filepath] = setTimeout(function () {
-					handler(filepath, stats, true /*← quick deflect flag*/);
-				}, 150);
-			}
-
-			return true;
-		}
-	}
-
-	return false;
+	let opts = ["--config", config, "--write"];
+	// [https://prettier.io/docs/en/cli.html#--ignore-path]
+	// [https://prettier.io/docs/en/ignore.html#ignoring-files]
+	// [https://github.com/prettier/prettier/issues/3460]
+	if (ignore) opts.push("--ignore-path", ignore);
+	opts.push(filepath); // "--loglevel", // "silent",
+	return spawn(pbin, opts, options);
 };
 
 /**
  * Kills the currently running/active process on the file.
  *
  * @param  {object} lookup - The lookup db object.
- * @param  {string} filepath - The file path of the modified file.
+ * @param  {string} file - The file path of the modified file.
  * @return {undefined} - Nothing is returned.
  */
-let kill = (lookup, filepath) => {
-	// Look for a running process on the file.
-	let __active_process__ = lookup.processes[filepath];
-	// Kill if active and not already completed.
-	if (__active_process__ && !__active_process__.__completed__) {
-		__active_process__.__killed_off__ = true;
-		__active_process__.kill();
+let kill = (lookup, file) => {
+	if (lookup.processes[file]) {
+		let procs = lookup.processes[file];
+		for (let i = 0, l = procs.length; i < l; i++) {
+			let proc = procs[i];
+			// [https://stackoverflow.com/a/42545818]
+			// [https://stackoverflow.com/a/21296291]
+			treekill(proc.pid, "SIGKILL");
+			proc.__SIGKILL = true;
+		}
+		delete lookup.processes[file];
 	}
 };
 
-module.exports = { fileinfo, child_process, deflect, kill, unallowed_ext };
+module.exports = { child, kill, ignore };

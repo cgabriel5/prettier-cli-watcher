@@ -35,11 +35,9 @@
 
 "use strict";
 
-// Needed modules.
 const fs = require("fs");
 const path = require("path");
 const util = require("util");
-const upath = require("upath");
 const events = require("events");
 
 /**
@@ -68,33 +66,8 @@ function Hound(options) {
 util.inherits(Hound, events.EventEmitter);
 Hound.prototype.watchers = [];
 
-/**
- * Filter paths against the user provided ignoredirs parameter.
- *
- * @param  {string} p - The file path to check.
- * @param  {regexp} ignoredirs_regexp - The dynamically created RegExp object
- *     created using the provided user ignoredirs.
- * @param  {object} system - Device platform information.
- * @return {boolean} - Boolean indicating whether path should be ignored.
- */
-let ignoredirs = (p, ignoredirs_regexp, system) => {
-	// Note: Normalize path slashes for Windows.
-	if (system.is_windows) {
-		p = upath.normalizeSafe(p);
-	}
-	let stats = fs.statSync(p);
-	if (stats.isDirectory()) {
-		// Add ending slash to check against right end dynamic RegExp.
-		if (!p.endsWith("/")) p += "/";
-		return (
-			// Directory must pass both left/right dynamic RegExp checks.
-			ignoredirs_regexp.left_regexp.test(p) && ignoredirs_regexp.test(p) // Right check.
-		);
-	} else {
-		// File: (right check) Can't contain any ignoreddirs in path.
-		return ignoredirs_regexp.test(p);
-	}
-};
+// Lookup table of files to ignore via --ignore flag.
+let skip = {};
 
 /**
  * Watch a file or directory tree for changes, and fire events when they happen.
@@ -107,23 +80,22 @@ let ignoredirs = (p, ignoredirs_regexp, system) => {
  */
 Hound.prototype.watch = function (src) {
 	var self = this;
+	const { ignored } = self.options;
 
-	// Get the dynamic ignore dirs RegExp and other options.
-	let { ignored, /*extensions, extcheck,*/ system } = self.options;
-
-	// Ignore paths containing ignore dirs.
-	if (ignoredirs(src, ignored, system)) return;
+	if (skip[src] || ignored(src)) {
+		skip[src] = true;
+		return;
+	}
 
 	var stats = fs.statSync(src);
 	var lastChange = null;
 	var watchFn = self.options.watchFn || fs.watch;
 	if (stats.isDirectory()) {
-		var files = fs.readdirSync(src);
-		for (var i = 0, len = files.length; i < len; i++) {
-			let file = files[i]; // Cache current file path.
-			let p = path.join(src, file); // Create path.
-			if (ignoredirs(p, ignored, system)) continue;
-			self.watch(src + path.sep + file);
+		let paths = fs.readdirSync(src);
+		for (let i = 0, l = paths.length; i < l; i++) {
+			let p = path.join(src, paths[i]);
+			if (!ignored(p)) self.watch(p);
+			else skip[p] = true;
 		}
 	}
 	self.watchers[src] = watchFn(src, function (/*event, filename*/) {
@@ -158,7 +130,6 @@ Hound.prototype.watch = function (src) {
 			// self.emit("delete", src);
 		}
 	});
-
 	// self.emit("watch", src);
 };
 

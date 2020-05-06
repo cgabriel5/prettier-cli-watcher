@@ -1,204 +1,92 @@
 #!/usr/bin/env node
+
 "use strict";
 
-const {
-	dir,
-	ignore,
-	exts,
-	notify,
-	log,
-	tempfile,
-	watcher,
-	dtime
-} = require("./params.js")();
-
-const os = require("os");
+const fs = require("fs");
+const glob = require("glob");
 const path = require("path");
 const chalk = require("chalk");
 const slash = require("slash");
 const notifier = require("node-notifier");
-const { tildelize } = require("./utils.js");
 
-const platform = os.platform();
-const system = {
-	platform,
-	is_macos: platform === "darwin",
-	is_windows: platform === "win32"
-};
+const params = require("./params.js")();
+const { dir, notify, log, config, ignore, watcher, dtime, globs } = params;
+const { tildelize, system } = require("./utils.js");
+const { fileinfo, child, kill, deflect } = require("./onchange.utils.js");
 
-const {
-	fileinfo,
-	child_process,
-	kill,
-	deflect,
-	unallowed_ext
-} = require("./onchange.utils.js");
-
-const lookup = {
-	processes: {},
-	errors: {},
-	changes: {},
-	timeouts: {}
-};
-const line_sep = "-".repeat("60");
+const sep = "-".repeat("60");
+const lookup = { processes: {}, errors: {}, timeouts: {} };
 
 /**
- * Watcher handler function. Main logic of watcher.
+ * Watcher handler.
  *
- * @param  {string} filepath - Filepath of modified file.
+ * @param  {string} file - Modified file path.
  * @param  {object} stats - Modified file's stats.
- * @param  {boolean} deflected - Boolean indicating whether last change was
- *     deflected due to quick file changes.
  * @return {undefined} - Nothing is returned.
  */
-let handler = (filepath, stats, deflected) => {
-	let orig_filepath = filepath;
+let handler = (file, stats) => {
+	if (system.win) file = slash(file);
 
-	// Convert Windows file slahses.
-	if (system.is_windows) filepath = slash(filepath);
+	kill(lookup, file);
 
-	// Check for an active prettier process on the file. If one exists
-	// kill it to start a new one. Kinda like the setTimeout/clearTimeout
-	// logic. This is done as the file was saved again before the current
-	// prettier process could finish. Therefore, the old process is killed
-	// and to then start a new one.
-	kill(lookup, filepath);
-
-	// If many changes are made to the file in rapid succession deflect all
-	// of them and use a set timeout to only run on last change.
-	if (deflect(lookup, filepath, stats, deflected, dtime, handler)) return;
-
-	// Get the file path information (name, dirname, etc.).
-	let { ext, name: filename, dirname: filedirname } = fileinfo(filepath);
-	let custom_filepath = `${tildelize(filedirname)}/${chalk.bold(filename)}`;
-
-	// File needs to be of the allowed file extensions.
-	if (!unallowed_ext(exts, ext, log, line_sep, custom_filepath)) return;
-
-	// Stop listening to file changes while formatting file. [not needed?]
-	// -→ watcher.unwatch(filepath);
-
-	const cprocess = child_process(filepath, tempfile);
-	lookup.processes[filepath] = cprocess;
+	const proc = child(file, config, ignore);
+	if (!lookup.processes[file]) lookup.processes[file] = [];
+	lookup.processes[file].push(proc);
 
 	let res = "";
-	let errored = true;
-
-	cprocess.stdout.on("data", (data) => {
+	let err = true;
+	proc.stdout.on("data", (data) => {
 		res = data;
-		errored = false;
+		err = false;
 	});
-	cprocess.stderr.on("data", (data) => {
+	proc.stderr.on("data", (data) => {
 		res = data;
-		errored = true;
+		err = true;
 	});
-
 	// [https://stackoverflow.com/a/17749844]
-	cprocess.on("error", (data) => {
+	proc.on("error", (data) => {
 		console.log(`[${chalk.red("error")}] Failed to run prettier.`);
 		process.exit();
 	});
+	// [https://link.medium.com/MYwtjYvag6]
+	proc.on("close", (code, signal) => {
+		if (signal === "SIGKILL" || proc.__SIGKILL) return;
+		delete lookup.processes[file];
 
-	cprocess.on("close", () => {
-		// Update last change time.
-		lookup.changes[filepath] = Date.now();
+		let msg = res.toString().trim();
+		if (err) {
+			let lineinfo = (msg.match(/(?! )\((\d+:\d+)\)$/m) || [""])[0];
+			let time = Date.now();
 
-		// Stop logging/notification logic if process was killed manually.
-		if (cprocess.__killed_off__) {
-			return;
-		} else {
-			cprocess.__completed__ = true;
-			delete lookup.processes[filepath];
-		}
-
-		// Re-watch file. [not needed?]
-		// -→ watcher.add(filepath);
-
-		// Stringify and cleanup response.
-		let response = res.toString().trim();
-		let message;
-
-		if (errored) {
-			let lineinfo = (response.match(/(?! )\((\d+:\d+)\)$/m) || [""])[0];
-
-			// Check if previous error exists.
-			let last_error = lookup.errors[filepath];
+			let last_error = lookup.errors[file];
 			if (last_error) {
-				// Compare current error with last error information.
-				// If the information is the same skip log/notification.
-				if (
-					last_error.response === response &&
-					last_error.lineinfo === lineinfo &&
-					// Deflect "quick saves" (i.e. pressing [Super/CTRL]+s
-					// in rapid succession.) if same error.
-					Date.now() - last_error.time <= 2000
-				) {
-					// Update the time.
-					last_error.time = Date.now();
+				// If last error and current error match return.
+				if (last_error.msg === msg && time - last_error.time <= 2000) {
+					last_error.time = time;
 					return;
 				}
 			}
 
-			// Store error information.
-			lookup.errors[filepath] = { response, lineinfo, time: Date.now() };
+			lookup.errors[file] = { msg, time };
 
-			// Cleanup original path.
-			orig_filepath = orig_filepath.replace(/^\.\//, "");
-			// Prep dynamic RegExp for Windows.
-			if (system.is_windows) {
-				// Add extra forward slashes so dynamic RegExp works on Windows.
-				orig_filepath = orig_filepath.replace(/\\/g, "\\\\");
-			}
-
-			orig_filepath = tildelize(orig_filepath);
-
-			// Create error message.
-			message = `${response
-				// Replace old file path with custom file path and
-				// red highlighted line numbers.
-				.replace(
-					new RegExp(`(\\.\\/)?${orig_filepath}:`),
-					`${custom_filepath}:${chalk.bold.red(
-						lineinfo.replace(/\(|\)/g, "")
-					)} —`
-				)
-				.replace(/error/, `error`)
-				// Remove original line information.
-				.replace(lineinfo, "")}`;
-
-			// Highlight error decorations for the following platforms.
-			if (system.is_windows || system.is_macos) {
-				message = message.replace(
-					/^\[error/gm,
-					`[${chalk.red("error")}`
-				);
-			}
-
-			// Send OS notification that prettier failed.
 			if (notify) {
 				let noptions = {
 					title: "prettier-cli-watcher",
-					message: `${tildelize(
-						filepath
-					)} format failed. ${lineinfo}`,
-					// [https://www.flaticon.com/free-icon/warning_196759#term=error&page=1&position=16]
+					msg: `${tildelize(file)} format failed. ${lineinfo}`,
 					icon: path.join(__dirname, "/assets/img/warning.png")
 				};
-				if (system.is_macos) noptions.actions = "Close"; // macOS close button.
+				if (system.mac) noptions.actions = "Close";
 				notifier.notify(noptions);
 			}
 		} else {
-			delete lookup.errors[filepath];
-
-			let duration = (response.match(/(?! )(\d+)(\w+)$/) || [""])[0];
-			message = `[${chalk.green(
-				"prettied"
-			)}] ${custom_filepath} ${duration}`;
+			delete lookup.errors[file];
+			let duration = (msg.match(/(?! )(\d+)(\w+)$/) || [""])[0];
+			file = path.relative(process.cwd(), file);
+			msg = `[${chalk.green("prettied")}] ${file} ${duration}`;
 		}
 
-		if (message && log) console.log(`${line_sep}\n${message}`);
+		if (msg && !log) console.log(`${sep}\n${msg}`);
 	});
 };
 
-// Get file watcher and only react to file modifications.
-require("./watcher.js")(dir, watcher, ignore, system).on("change", handler);
+require("./watcher.js")(dir, watcher, globs).on("change", handler);

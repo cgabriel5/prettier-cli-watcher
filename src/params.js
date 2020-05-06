@@ -7,78 +7,13 @@ const toml = require("toml");
 const chalk = require("chalk");
 const log = require("fancy-log");
 const fe = require("file-exists");
+const dirglob = require("dir-glob");
 const de = require("directory-exists");
 const minimist = require("minimist");
 const escapereg = require("lodash.escaperegexp");
 const { cosmiconfigSync } = require("cosmiconfig");
-const { tildelize } = require("./utils.js");
-
-/**
- * Returns the data type of the provided object.
- *
- * @param  {*} object - The object to check.
- * @return {string} - The data type of the checked object.
- *
- * @resource [https://stackoverflow.com/questions/7390426/better-way-to-get-type-of-a-javascript-variable]
- */
-let dtype = function (object) {
-	// Will always return something like "[object {type}]".
-	return Object.prototype.toString
-		.call(object)
-		.replace(/(\[object |\])/g, "")
-		.toLowerCase();
-};
-
-/**
- * Converts a comma/pipe delimited string into an array.
- *
- * @param  {string} list - The list to convert to array.
- * @return {array} - The array.
- */
-let toarray = (list) => list.split(/,|\|/).map((item) => item.trim());
-
-/**
- * Will return a RegExp object made from the provided ignore parameter.
- *     Will be in the format: /((dir1|dirN)\\/)/. Special characters like
- *     the dot in .git will be escaped.
- *
- * @param  {array} array - The array of dirs to ignore.
- * @return {regexpObject} - The RegExp object.
- */
-let dynamicreg = (array) => {
-	// Add opening RegExp syntax.
-	let source = ["(("];
-
-	// Loop over every dir.
-	for (let i = 0, l = array.length; i < l; i++) {
-		// Add dir and a pipe "|" to source.
-		source.push(escapereg(array[i]), "|");
-	}
-	// Remove the last "|" from array.
-	source.pop();
-
-	// Copy parts to create a left side path check for hound.
-	let left_parts = [...source];
-	// Remove the first item.
-	left_parts.shift();
-	// Add closing and ending patterns.
-	left_parts.unshift("\\/((");
-	left_parts.push("))");
-
-	// Add closing RegExp syntax.
-	source.push(")\\/)");
-
-	// Create dynamic RegExp.
-	let dynamic_regexp_right = new RegExp(source.join(""));
-	let dynamic_regexp_left = new RegExp(left_parts.join(""));
-
-	// Attach the left RegExp to the main right RegExp.
-	dynamic_regexp_right.left_regexp = dynamic_regexp_left;
-	// Store original input as a string for later access.
-	dynamic_regexp_right.string = array.join("|");
-
-	return dynamic_regexp_right;
-};
+const { dtype, tildelize } = require("./utils.js");
+const parseignore = require("parse-gitignore");
 
 /**
  * Get and parse CLI parameters.
@@ -87,19 +22,30 @@ let dynamicreg = (array) => {
  */
 module.exports = function () {
 	const params = minimist(process.argv.slice(2));
-	const def_ignore = "node_modules|bower_components|.git|dist";
-	const def_exts =
-		"js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql";
-	let dir = params.dir || process.cwd();
-	const ignore = dynamicreg(toarray(params.ignore || def_ignore));
-	const exts = toarray(params.exts || def_exts);
+
+	const g = params.ignore;
+	let globs = g || [];
+	if (globs.length) {
+		globs = typeof g === "string" ? [g] : g;
+		globs = dirglob.sync(globs);
+	}
+
+	let defdir = process.cwd();
+	let dir = params.dir || defdir;
+	if (dir && dir === true) dir = defdir;
+	if (dir === "." || dir === "./") dir = defdir;
+	if (dir.endsWith("/")) dir = dir.slice(0, -1);
+
 	const notify = params.notify || false;
 	// [https://github.com/substack/minimist/issues/123]
-	const log = !(params.log === false);
+	// const log = !(params.log === false);
+	const log = params.quiet || false;
 	const watcher = params.watcher || "chokidar";
 	const configpath_ori = params.config;
-	let dtime = params.dtime;
-	const tdtime = dtype(dtime);
+	let ignorepath = params["ignore-path"];
+	let dtime = params.deflect;
+	if (!dtime || dtype(dtime) !== "number" || dtime < 0) dtime = 500;
+	const setup = params.setup;
 
 	// Directory must exist.
 	if (!path.isAbsolute(dir)) dir = path.resolve(dir);
@@ -111,21 +57,9 @@ module.exports = function () {
 		);
 		process.exit();
 	}
-	// Remove trailing slash from dir.
-	if (dir.endsWith("/")) dir = dir.slice(0, -1);
-
-	// Reset dtime if need be.
-	if (!dtime || tdtime !== "number" || dtime < 0 || dtime > 1500) dtime = 500;
 
 	// Check if supplied file watcher is allowed.
-	if (!["chokidar", "hound"].includes(watcher)) {
-		console.log(
-			`[${chalk.red("error")}] ${chalk.bold(
-				"--watcher"
-			)} "${watcher}" is not supported. Provide 'chokidar' or 'hound'.`
-		);
-		process.exit();
-	}
+	if (!["chokidar", "hound"].includes(watcher)) watcher = "chokidar";
 
 	let res = {};
 	let config = {};
@@ -197,37 +131,88 @@ module.exports = function () {
 	config = res.config;
 	usedconfigpath = res.filepath;
 
+	let ignorecontents = "";
+	let usedignorepath = "";
+	if (ignorepath) {
+		if (!path.isAbsolute(ignorepath)) ignorepath = path.resolve(ignorepath);
+		if (!fe.sync(ignorepath)) {
+			let issue = "Could not open ";
+			console.log(
+				`[${chalk.red("error")}] ${issue}: ${chalk.bold(ignorepath)}.`
+			);
+			process.exit();
+		}
+		ignorecontents = fs.readFileSync(ignorepath, "utf8");
+		usedignorepath = ignorepath;
+	} else {
+		const exp = cosmiconfigSync(app, {
+			searchPlaces: [`.${app}ignore`, `configs/${app}ignore`],
+			loaders: { noExt: (filepath, content) => content }
+		});
+		exp.clearCaches();
+		let igres = exp.search() || { config: "", isEmpty: true, filepath: "" };
+		ignorecontents = igres.config;
+		ignorepath = igres.filepath;
+		usedignorepath = ignorepath;
+	}
+
+	// If config file is relative to watch dir, make path relative.
+	if (usedignorepath.startsWith(process.cwd())) {
+		usedignorepath = "./" + path.relative(process.cwd(), usedignorepath);
+	}
+
 	// If config file is relative to watch dir, make path relative.
 	if (usedconfigpath.startsWith(process.cwd())) {
 		usedconfigpath = "./" + path.relative(process.cwd(), usedconfigpath);
 	}
 
+	// res.isEmpty = true;
+
 	temp.track(); // Automatically track/cleanup temp files at exit.
 	let tempfile = temp.openSync({ prefix: `pcw.conf-`, suffix: ".json" }).path;
 	fs.writeFileSync(tempfile, JSON.stringify(config, null, 2), "utf8");
 
+	if (usedignorepath) {
+		ignorepath = temp.openSync({ prefix: `pcw.ig-`, suffix: ".ig" }).path;
+		fs.writeFileSync(ignorepath, ignorecontents, "utf8");
+
+		let ignores = parseignore(ignorecontents);
+		if (ignores) globs = ignores.concat(dirglob.sync(globs));
+	}
+
 	// Print the used flags and their values.
-	if (log) {
+	const sep = "-".repeat("60");
+	if (setup) {
+		console.log(`${sep}`);
 		const { bold, blue, yellow, magenta } = chalk;
-		console.log(`${bold("Watching")}: ${tildelize(dir)}`);
-		console.log(`--config  : ${yellow(usedconfigpath)}`);
-		console.log(`--ignore  : ${yellow(ignore.string)}`);
-		console.log(`--exts    : ${yellow(exts.join("|"))}`);
-		console.log(`--watcher : ${yellow(watcher)}`);
-		console.log(`--dtime   : ${blue(dtime)}`);
-		console.log(`--notify  : ${magenta(notify)}`);
-		console.log(`--log     : ${magenta(log)}`);
+		console.log(`   dir : ${bold(tildelize(dir))}`);
+		if (res.isEmpty) usedconfigpath = "<prettier-defaults>";
+		console.log(`config : ${usedconfigpath}`);
+		console.log(`ignore : ${usedignorepath}`);
+		// console.log(`ignore  : ${globs.join(" ; ")}`);
+		// console.log(`watcher : ${watcher}`);
+		// console.log(`deflect : ${blue(dtime)}`);
+		console.log(`notify : ${magenta(notify)}`);
+		console.log(` quiet : ${magenta(log)}`);
+		// console.log(`${sep}`);
+	}
+
+	// Warn when config file was not found.
+	if (res.isEmpty) {
+		let msg = "Config file not found — using prettier defaults.";
+		msg = `[${chalk.yellow("warn")}] ${msg}`;
+		if (setup) msg = `${sep}\n${msg}`;
+		console.log(msg);
 	}
 
 	return {
 		dir,
-		configpath,
-		ignore,
-		exts,
 		notify,
 		log,
-		tempfile,
+		config: tempfile,
+		ignore: ignorepath,
+		watcher,
 		dtime,
-		watcher
+		globs
 	};
 };
