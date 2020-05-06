@@ -4,37 +4,25 @@ const os = require("os");
 const path = require("path");
 const chalk = require("chalk");
 
+const cwd = process.cwd();
+const hdir = os.homedir();
+const uos = os.platform();
 const sep = "-".repeat("60");
 
 /**
- * Returns the data type of the provided object.
- *
- * @param  {*} object - The object to check.
- * @return {string} - The data type of the checked object.
- *
- * @resource [https://stackoverflow.com/q/7390426]
- */
-// let dtype = function (object) {
-// 	// Will always return something like "[object {type}]".
-// 	return Object.prototype.toString
-// 		.call(object)
-// 		.replace(/(\[object |\])/g, "")
-// 		.toLowerCase();
-// };
-
-/**
- * Replace homd directory in path with '~'.
+ * Replace home directory in path with '~'.
  *
  * @param  {string} p - The path.
  * @return {string} - The modified path.
  */
-let tildelize = (p) => {
-	const hdir = os.homedir();
-	if (p.startsWith(hdir)) p = p.replace(hdir, "~");
-	return p;
-};
 
-const uos = os.platform();
+let tildelize = (p) => (p.startsWith(hdir) ? p.replace(hdir, "~") : p);
+
+/**
+ * Return object containing system platform.
+ *
+ * @return {object} - Object containing system information.
+ */
 let system = () => ({ mac: uos === "darwin", win: uos === "win32" });
 
 /**
@@ -54,10 +42,15 @@ let error = (msg) => {
  * @param  {string} p - The path.
  * @return {string} - The modified path.
  */
-let relativize = (p) => {
-	let cwd = process.cwd();
-	if (p.startsWith(cwd)) p = "./" + path.relative(cwd, p);
-	return p;
-};
 
-module.exports = { sep, error, relativize, tildelize, system };
+let relativize = (p) => (p.startsWith(cwd) ? "./" + path.relative(cwd, p) : p);
+
+/**
+ * Make path absolute.
+ *
+ * @param  {string} p - The path.
+ * @return {string} - The modified path.
+ */
+let absolutize = (p) => (!path.isAbsolute(p) ? path.resolve(p) : p);
+
+module.exports = { sep, error, absolutize, relativize, tildelize, system };
