@@ -15,7 +15,7 @@
 		"url": "git+https://github.com/cgabriel5/prettier-cli-watcher.git"
 	},
 	"scripts": {
-		"pretty": "prettier-cli-watcher --configpath='./configs/prettier.config.json' --watcher='hound'",
+		"pretty": "prettier-cli-watcher --watcher=hound --notify",
 		"lint": "cross-env ESLINT_CFS_VERBOSE=true ./node_modules/eslint/bin/eslint.js -c='configs/eslint.config.js' --ignore-path='configs/eslintignore' --format='simple' '**/*.{js,jsx}'; exit 0"
 	},
 	"dependencies": {
