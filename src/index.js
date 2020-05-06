@@ -12,7 +12,7 @@ const notifier = require("node-notifier");
 const params = require("./params.js")();
 const { dir, notify, log, config, ignore, watcher, globs } = params;
 const { tildelize, system } = require("./utils.js");
-const { fileinfo, child, kill } = require("./onchange.utils.js");
+const { child, kill } = require("./onchange.utils.js");
 
 const sep = "-".repeat("60");
 const lookup = { processes: {}, errors: {}, timeouts: {} };
