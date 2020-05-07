@@ -41,15 +41,15 @@ Then run via `$ npm run pretty` or `$ yarn run pretty`.
 ### Options
 
 - `--dir`: The absolute path of directory to watch (default: `process.cwd()`).
-- `--config`: The repo's prettier config is automatically [located](#configfiles) and used via [cosmiconfig](https://github.com/davidtheclark/cosmiconfig).
+- `--config`: The project's prettier config is automatically [located](#configfiles) and used via [cosmiconfig](https://github.com/davidtheclark/cosmiconfig).
   - Or provide the file's absolute path or relative path to `--dir`.
-- `--ignore`: Like the prettier config, the repo's [`.prettierignore`](https://prettier.io/docs/en/ignore.html#ignoring-files) file is also located and used.
+- `--ignore`: Like the prettier config, the project's [`.prettierignore`](https://prettier.io/docs/en/ignore.html#ignoring-files) file is also located and used.
   - Or provide the file's absolute path or relative path to `--dir`.
   - **Note:** By default the entire `--dir` directory is watched. Make sure to use a [`.prettierignore`](https://prettier.io/docs/en/ignore.html#ignoring-files) file to ignore paths like `node_modules/`, `.git/`, and `dist/`, for example.
 - `--notify`: Enable OS notifications when prettier errors.
 - `--quiet`: Disable output.
 - `--setup`: List setup details.
-- `--dry`: Runs prettier without saving changes (good for test runs).
+- `--dry`: Run prettier without saving changes (good for ignore test runs).
 
 <!-- - `--watcher`: File watcher to use (default: [`chokidar`](https://github.com/paulmillr/chokidar), or [`hound`](https://github.com/gforceg/node-hound)). -->
 
@@ -73,7 +73,7 @@ $ prettier-cli-watcher --quiet
 
 <br>
 
-[cosmiconfig](https://github.com/davidtheclark/cosmiconfig) is used to locate the repo's prettier configuration file if one is not explicitly provided. Going from top to bottom, the following places are searched until a prettier configuration file is found. If one is not found the default prettier settings will be used.
+[cosmiconfig](https://github.com/davidtheclark/cosmiconfig) is used to locate the project's prettier configuration file if one is not explicitly provided. Going from top to bottom, the following places are searched until a prettier configuration file is found. If one is not found the default prettier settings are used.
 
 ```
 [
@@ -96,7 +96,7 @@ $ prettier-cli-watcher --quiet
 ]
 ```
 
-Likewise, the repo's [`.prettierignore`](https://prettier.io/docs/en/ignore.html#ignoring-files) is looked for at the following locations. By default the entire `--dir` directory is watched so ensure to use a [`.prettierignore`](https://prettier.io/docs/en/ignore.html#ignoring-files) file to ignore paths like `node_modules/`, `.git/`, and `dist/`, for example.
+Likewise, the project's [`.prettierignore`](https://prettier.io/docs/en/ignore.html#ignoring-files) is looked for at the following locations. By default the entire `--dir` directory is watched so ensure to use a [`.prettierignore`](https://prettier.io/docs/en/ignore.html#ignoring-files) file to ignore paths like `node_modules/`, `.git/`, and `dist/`, for example.
 
 ```
 [
