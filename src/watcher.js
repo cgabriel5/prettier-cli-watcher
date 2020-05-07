@@ -1,7 +1,7 @@
 "use strict";
 
 const nodeignore = require("ignore");
-const { ignore } = require("./onchange.utils.js");
+const { ignore } = require("./onchange.js");
 
 /**
  * Determines which file watcher to use. Defaults to chokidar.
