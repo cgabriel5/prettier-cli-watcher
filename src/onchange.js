@@ -88,17 +88,16 @@ let child = (filepath, dry, config, ignore) => {
  * @return {undefined} - Nothing is returned.
  */
 let kill = (lookup, file) => {
-	if (lookup.processes[file]) {
-		let procs = lookup.processes[file];
-		for (let i = 0, l = procs.length; i < l; i++) {
-			let proc = procs[i];
-			// [https://stackoverflow.com/a/42545818]
-			// [https://stackoverflow.com/a/21296291]
-			treekill(proc.pid, "SIGKILL");
-			proc.__SIGKILL = true;
-		}
-		delete lookup.processes[file];
+	if (!lookup.processes[file]) return;
+	let procs = lookup.processes[file];
+	for (let i = 0, l = procs.length; i < l; i++) {
+		let proc = procs[i];
+		// [https://stackoverflow.com/a/42545818]
+		// [https://stackoverflow.com/a/21296291]
+		treekill(proc.pid, "SIGKILL");
+		proc.__SIGKILL = true;
 	}
+	delete lookup.processes[file];
 };
 
 module.exports = { child, kill, ignore };
