@@ -1,11 +1,9 @@
 "use strict";
 
 const fs = require("fs");
-const path = require("path");
 const temp = require("temp");
 const toml = require("toml");
 const chalk = require("chalk");
-const log = require("fancy-log");
 const fe = require("file-exists");
 const minimist = require("minimist");
 const de = require("directory-exists");
