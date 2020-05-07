@@ -22,7 +22,7 @@ let tildelize = (p) => (p.startsWith(hdir) ? p.replace(hdir, "~") : p);
  *
  * @return {object} - Object containing system information.
  */
-let system = () => ({ mac: uos === "darwin", win: uos === "win32" });
+let system = { mac: uos === "darwin", win: uos === "win32" };
 
 /**
  * Prints error and exists process.
