@@ -69,7 +69,7 @@ let handler = (file /*, stats*/) => {
 			if (notify) {
 				let noptions = {
 					title: "prettier-cli-watcher",
-					msg: `${tildelize(file)} format failed. ${lineinfo}`,
+					message: `${tildelize(file)} format failed. ${lineinfo}`,
 					icon: path.join(__dirname, "/assets/img/warning.png")
 				};
 				if (system.mac) noptions.actions = "Close";
