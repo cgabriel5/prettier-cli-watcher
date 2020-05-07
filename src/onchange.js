@@ -10,27 +10,23 @@ const { error, system } = require("./utils.js");
 const spawn = require("cross-spawn-with-kill");
 
 /**
- * Determines whether user needs to ignore path.
+ * Determines whether path should be ignored.
  *
- * @param  {string} p - The file path.
- * @param  {array} globs - The globs to test against.
+ * @param  {string} p - File path.
+ * @param  {array} ig - The nodeignore "ignore" object.
  * @return {boolean} - Boolean indicating whether to ignore or not.
  */
-
 let ignore = (p, ig) => {
 	if (system.windows) p = upath.normalizeSafe(p);
 	let file = path.relative(process.cwd(), p);
 	if (system.windows) file = upath.normalizeSafe(file);
 	let res = false;
 
-	// Use try/catch in case path no longer exists.
+	// Try/catch in case file was deleted.
 	try {
 		if (fs.statSync(p).isDirectory() && !file.endsWith("/")) file += "/";
 		let test = ig.ignores(file);
-		if (test && !ignore.lookup[file]) {
-			ignore.lookup[file] = true;
-			// console.log(`[${chalk.cyan("ignored")}] ${file}`);
-		}
+		if (test && !ignore.lookup[file]) ignore.lookup[file] = true;
 		res = test;
 	} catch {}
 	return res;
@@ -40,9 +36,10 @@ ignore.lookup = {}; // Track ignored files.
 /**
  * Create the prettier process on file.
  *
- * @param  {string} filepath - The modified file's path.
+ * @param  {string} filepath - File path.
  * @param  {boolean} dry - Save formatted contents or not.
  * @param  {string} config - Path to temporary prettier config file.
+ * @param  {string} ignore - Path to temporary ignore file.
  * @return {object} - The spawned child process.
  */
 let child = (filepath, dry, config, ignore) => {
@@ -81,10 +78,10 @@ let child = (filepath, dry, config, ignore) => {
 };
 
 /**
- * Kills the currently running/active process on the file.
+ * Kills file's running/active processes.
  *
  * @param  {object} lookup - The lookup db object.
- * @param  {string} file - The file path of the modified file.
+ * @param  {string} file - File path.
  * @return {undefined} - Nothing is returned.
  */
 let kill = (lookup, file) => {

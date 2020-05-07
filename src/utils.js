@@ -15,7 +15,6 @@ const sep = "-".repeat("60");
  * @param  {string} p - The path.
  * @return {string} - The modified path.
  */
-
 let tildelize = (p) => (p.startsWith(hdir) ? p.replace(hdir, "~") : p);
 
 /**
@@ -42,7 +41,6 @@ let error = (msg) => {
  * @param  {string} p - The path.
  * @return {string} - The modified path.
  */
-
 let relativize = (p) => (p.startsWith(cwd) ? "./" + path.relative(cwd, p) : p);
 
 /**

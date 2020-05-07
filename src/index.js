@@ -16,8 +16,8 @@ const lookup = { processes: {}, errors: {} };
 /**
  * Watcher handler.
  *
- * @param  {string} file - Modified file path.
- * @param  {object} stats - Modified file's stats.
+ * @param  {string} file - File path.
+ * @param  {object} stats - File's stats object.
  * @return {undefined} - Nothing is returned.
  */
 let handler = (file /*, stats*/) => {

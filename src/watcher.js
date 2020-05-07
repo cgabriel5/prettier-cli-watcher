@@ -4,11 +4,12 @@ const nodeignore = require("ignore");
 const { ignore } = require("./onchange.js");
 
 /**
- * Determines which file watcher to use. Defaults to chokidar.
+ * Determines which file watcher to use.
  *
  * @param  {string} dir - The directory to watch.
- * @param  {string} name - Name of file watcher to use.
- * @return {object} - The file watcher.
+ * @param  {string} name - File watcher name.
+ * @param  {array} globs - Globs to test paths against (ignored) .
+ * @return {object} - The watcher.
  */
 module.exports = function (dir, name, globs) {
 	const ig = nodeignore().add(globs);
