@@ -50,6 +50,7 @@ Then run via `$ npm run pretty` or `$ yarn run pretty`.
 - `--quiet`: Disable output.
 - `--setup`: List setup details.
 - `--dry`: Run prettier without saving changes (good for ignore test runs).
+- `--version`: List prettier-cli-watcher version.
 
 <!-- - `--watcher`: File watcher to use (default: [`chokidar`](https://github.com/paulmillr/chokidar), or [`hound`](https://github.com/gforceg/node-hound)). -->
 

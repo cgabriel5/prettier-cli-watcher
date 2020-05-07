@@ -14,6 +14,11 @@ const { sep, error, absolutize, relativize, tildelize } = require("./utils.js");
 module.exports = function () {
 	const params = minimist(process.argv.slice(2));
 
+	if (params.version || params.v) {
+		console.log(require("../package.json").version);
+		process.exit();
+	}
+
 	let cwd = process.cwd();
 	let dir = absolutize(typeof params.dir !== "string" ? cwd : params.dir);
 	// // dir can't be out-of-bounds: [https://stackoverflow.com/a/45242825]
