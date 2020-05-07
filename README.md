@@ -49,7 +49,7 @@ Then run via `$ npm run pretty` or `$ yarn run pretty`.
 - `--notify`: Enable OS notifications when prettier errors.
 - `--quiet`: Disable output.
 - `--setup`: List setup details.
-- `--dry`: Runs prettier without saving changes.
+- `--dry`: Runs prettier without saving changes (good for test runs).
 
 <!-- - `--watcher`: File watcher to use (default: [`chokidar`](https://github.com/paulmillr/chokidar), or [`hound`](https://github.com/gforceg/node-hound)). -->
 
