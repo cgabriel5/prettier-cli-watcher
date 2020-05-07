@@ -58,7 +58,6 @@ let handler = (file /*, stats*/) => {
 				let check1 = last_error.msg === msg;
 				let check2 = lineinfo && last_error.lineinfo === lineinfo;
 				let check3 = time - last_error.time <= 2000;
-				// If last error and current error match return.
 				if (check1 && check2 && check3) {
 					last_error.time = time;
 					return;
