@@ -8,8 +8,8 @@ const slash = require("slash");
 const notifier = require("node-notifier");
 
 const params = require("./params.js")();
-const { dir, notify, log, tconfig, tignore, watcher, globs } = params;
-const { child, kill } = require("./onchange.utils.js");
+const { dir, dry, notify, log, tconfig, tignore, watcher, globs } = params;
+const { child, kill } = require("./onchange.js");
 const { sep, error, tildelize, system } = require("./utils.js");
 const lookup = { processes: {}, errors: {}, timeouts: {} };
 
@@ -25,7 +25,7 @@ let handler = (file /*, stats*/) => {
 
 	kill(lookup, file);
 
-	const proc = child(file, tconfig, tignore);
+	const proc = child(file, dry, tconfig, tignore);
 	if (!lookup.processes[file]) lookup.processes[file] = [];
 	lookup.processes[file].push(proc);
 

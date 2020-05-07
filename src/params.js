@@ -41,6 +41,7 @@ module.exports = function () {
 	const setup = params.setup;
 	const log = params.quiet || false;
 	const notify = params.notify || false;
+	const dry = !(params.dry === undefined);
 	let watcher = params.watcher || "chokidar";
 	if (!["chokidar", "hound"].includes(watcher)) watcher = "chokidar";
 
@@ -131,6 +132,7 @@ module.exports = function () {
 		console.log(`ignore : ${tildelize(relativize(ignorepath))}`);
 		console.log(`notify : ${magenta(notify)}`);
 		console.log(` quiet : ${magenta(log)}`);
+		console.log(`   dry : ${magenta(dry)}`);
 	}
 
 	if (res.isEmpty) {
@@ -146,5 +148,5 @@ module.exports = function () {
 		console.log(msg);
 	}
 
-	return { dir, notify, log, tconfig, tignore, watcher, globs };
+	return { dir, dry, notify, log, tconfig, tignore, watcher, globs };
 };

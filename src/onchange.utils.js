@@ -41,10 +41,11 @@ ignore.lookup = {}; // Track ignored files.
  * Create the prettier process on file.
  *
  * @param  {string} filepath - The modified file's path.
+ * @param  {boolean} dry - Save formatted contents or not.
  * @param  {string} config - Path to temporary prettier config file.
  * @return {object} - The spawned child process.
  */
-let child = (filepath, config, ignore) => {
+let child = (filepath, dry, config, ignore) => {
 	// [https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options]
 	let options = { stdio: "pipe" };
 
@@ -69,7 +70,8 @@ let child = (filepath, config, ignore) => {
 
 	if (!pbin) error(`Could not find local ./${binpath}.`);
 
-	let opts = ["--config", config, "--write"];
+	let opts = ["--config", config];
+	if (!dry) opts.push("--write");
 	// [https://prettier.io/docs/en/cli.html#--ignore-path]
 	// [https://prettier.io/docs/en/ignore.html#ignoring-files]
 	// [https://github.com/prettier/prettier/issues/3460]
