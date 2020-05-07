@@ -8,12 +8,20 @@ Runs [prettier](https://github.com/prettier/prettier) from CLI on project files 
 
 ### Install
 
+Locally per project:
+
 ```sh
 $ npm install prettier-cli-watcher --save-dev
-
 # or
-
 $ yarn add prettier-cli-watcher --dev
+```
+
+Or globally:
+
+```sh
+$ sudo npm install -g prettier-cli-watcher
+# or
+$ yarn global add prettier-cli-watcher
 ```
 
 <a name="how-to-use"></a>
@@ -24,7 +32,7 @@ $ yarn add prettier-cli-watcher --dev
 $ prettier-cli-watcher
 ```
 
-Or as a `package.json` script:
+Or use a `package.json` script:
 
 ```json
 ...
@@ -49,22 +57,10 @@ Then run via `$ npm run pretty` or `$ yarn run pretty`.
 - `--notify`: Enable OS notifications when prettier errors.
 - `--quiet`: Disable output.
 - `--setup`: List setup details.
-- `--dry`: Run prettier without saving changes (good for ignore test runs).
+- `--dry`: Run prettier without saving changes (for ignore test runs).
 - `--version`: List prettier-cli-watcher version.
 
 <!-- - `--watcher`: File watcher to use (default: [`chokidar`](https://github.com/paulmillr/chokidar), or [`hound`](https://github.com/gforceg/node-hound)). -->
-
-<a name="examples"></a>
-
-### Examples
-
-```sh
-# Watch process.cwd() and turn on OS notifications for errors.
-$ prettier-cli-watcher --notify
-
-# Watch process.cwd() and turn off logging.
-$ prettier-cli-watcher --quiet
-```
 
 <a name="configfiles"></a>
 
