@@ -11,7 +11,7 @@ const params = require("./params.js")();
 const { dir, dry, notify, log, tconfig, tignore, watcher, globs } = params;
 const { child, kill } = require("./onchange.js");
 const { sep, error, tildelize, system } = require("./utils.js");
-const lookup = { processes: {}, errors: {}, timeouts: {} };
+const lookup = { processes: {}, errors: {} };
 
 /**
  * Watcher handler.
