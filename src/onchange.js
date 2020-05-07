@@ -67,14 +67,21 @@ let child = (filepath, dry, config, ignore) => {
 
 	if (!pbin) error(`Could not find local ./${binpath}.`);
 
-	let opts = ["--config", config];
-	if (!dry) opts.push("--write");
+	let args = [];
+	// Maintain prettier output colors for errors.
+	// [https://github.com/Marak/colors.js/issues/127]
+	// [https://github.com/Marak/colors.js#enablingdisabling-colors]
+	// [https://stackoverflow.com/a/9137636]
+	args.push("--colors", "always");
+	args.push("--config", config);
+	if (!dry) args.push("--write");
 	// [https://prettier.io/docs/en/cli.html#--ignore-path]
 	// [https://prettier.io/docs/en/ignore.html#ignoring-files]
 	// [https://github.com/prettier/prettier/issues/3460]
-	if (ignore) opts.push("--ignore-path", ignore);
-	opts.push(filepath); // "--loglevel", // "silent",
-	return spawn(pbin, opts, options);
+	if (ignore) args.push("--ignore-path", ignore);
+
+	args.push(filepath); // "--loglevel", // "silent",
+	return spawn(pbin, args, options);
 };
 
 /**
