@@ -8,10 +8,11 @@ const slash = require("slash");
 const notifier = require("node-notifier");
 
 const params = require("./params.js")();
-const { dir, dry, notify, log, tconfig, tignore, watcher, globs } = params;
-const { child, kill } = require("./onchange.js");
+const { dir, dry, notify, log, tconfig } = params;
+const { tignore, watcher, globs, dtime } = params;
+const { child, deflect } = require("./onchange.js");
 const { sep, error, tildelize, system } = require("./utils.js");
-const lookup = { processes: {}, errors: {} };
+const lookup = { processes: {}, errors: {}, changes: {}, timeouts: {} };
 
 /**
  * Watcher handler.
@@ -20,10 +21,10 @@ const lookup = { processes: {}, errors: {} };
  * @param  {object} stats - File's stats object.
  * @return {undefined} - Nothing is returned.
  */
-let handler = (file /*, stats*/) => {
+let handler = (file, stats, deflected) => {
 	if (system.win) file = slash(file);
 
-	kill(lookup, file);
+	if (deflect(lookup, file, stats, deflected, 500, handler)) return;
 
 	const proc = child(file, dry, tconfig, tignore);
 	if (!lookup.processes[file]) lookup.processes[file] = [];
@@ -45,6 +46,7 @@ let handler = (file /*, stats*/) => {
 	});
 	// [https://link.medium.com/MYwtjYvag6]
 	proc.on("close", (code, signal) => {
+		lookup.changes[file] = Date.now();
 		if (signal === "SIGKILL" || proc.__SIGKILL) return;
 		delete lookup.processes[file];
 

@@ -48,6 +48,10 @@ module.exports = function () {
 	let watcher = params.watcher || "chokidar";
 	if (!["chokidar", "hound"].includes(watcher)) watcher = "chokidar";
 
+	const dtime = params.deflect || 500;
+	if (typeof dtime !== "number") dtime = 500;
+	if (dtime < 0) dtime = 0;
+
 	let res = {};
 	if (configpath) {
 		configpath = absolutize(configpath);
@@ -151,5 +155,5 @@ module.exports = function () {
 		console.log(msg);
 	}
 
-	return { dir, dry, notify, log, tconfig, tignore, watcher, globs };
+	return { dir, dry, notify, log, tconfig, tignore, watcher, globs, dtime };
 };

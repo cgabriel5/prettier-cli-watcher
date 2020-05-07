@@ -104,4 +104,38 @@ let kill = (lookup, file) => {
 	delete lookup.processes[file];
 };
 
-module.exports = { child, kill, ignore };
+/**
+ * Rapid file change deflection logic.
+ *
+ * @param  {object} lookup - The lookup db object.
+ * @param  {string} file - File path.
+ * @param  {object} stats - File stats object.
+ * @param  {boolean} deflected - Was last change event deflected?
+ * @param  {number} dtime - Time (ms) used to deflect rapid changes.
+ * @return {boolean} - Indicates if change event should be deflected.
+ */
+let deflect = (lookup, file, stats, deflected, dtime, handler) => {
+	kill(lookup, file);
+
+	if (!dtime) {
+		return;
+	}
+	let ltime = lookup.changes[file];
+	let mtime = stats.mtime.getTime();
+	if (ltime && !deflected) {
+		let delta = mtime - ltime;
+		if (delta < dtime) {
+			if (lookup.timeouts[file]) {
+				clearTimeout(lookup.timeouts[file]);
+				delete lookup.timeouts[file];
+			}
+			if (delta >= 0) {
+				let timeout = setTimeout(() => handler(file, stats, true), 150);
+				lookup.timeouts[file] = timeout;
+			}
+			return true;
+		}
+	}
+};
+
+module.exports = { child, ignore, deflect };
