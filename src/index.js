@@ -55,14 +55,17 @@ let handler = (file /*, stats*/) => {
 
 			let last_error = lookup.errors[file];
 			if (last_error) {
+				let check1 = last_error.msg === msg;
+				let check2 = lineinfo && last_error.lineinfo === lineinfo;
+				let check3 = time - last_error.time <= 2000;
 				// If last error and current error match return.
-				if (last_error.msg === msg && time - last_error.time <= 2000) {
+				if (check1 && check2 && check3) {
 					last_error.time = time;
 					return;
 				}
 			}
 
-			lookup.errors[file] = { msg, time };
+			lookup.errors[file] = { msg, lineinfo, time };
 
 			if (notify) {
 				let noptions = {
