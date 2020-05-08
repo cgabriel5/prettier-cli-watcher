@@ -1,210 +1,110 @@
 # prettier-cli-watcher
 
-##### Table of Contents
+Runs [prettier](https://github.com/prettier/prettier) from CLI on project files when modified.
 
-- [Overview](#overview)
-- [Features](#features)
-- [Install](#install)
-- [How To Use](#how-to-use)
-  - [Ubuntu/macOS](#how-to-use-non-windows)
-  - [Windows](#how-to-use-windows)
-- [Options](#options)
-- [Examples](#examples)
-- [Per-extension Configurations](#per-extension-configurations)
-- [OS Support](#os-support)
-- [Contributing](#contributing)
-- [Attribution](#attribution)
-- [License](#license)
-
-<a name="overview"></a>
-
-### Overview
-
-Runs [prettier](https://github.com/prettier/prettier) (from CLI) on project files when modified.
-
-<img src="/src/assets/img/example-output.png" width="65%">
-
-<a name="features"></a>
-
-### Features
-
-- Runs prettier on file when modified.
-  - Pressing <kbd>ctrl</kbd> + <kbd>s</kbd> in rapid succession on a file runs prettier only on the last save.
-- Sends OS notification and logs location of error when prettier fails to format file.
-  - Logging/notifications on by default (can be disabled).
-- [Per-extension prettier configurations.](#per-extension-configurations)
-  - Have different prettier configurations for different file extensions.
-  - For example, have a universal configuration for all allowed files but a different one for `.md` files.
+<!-- <img src="/src/assets/img/example-output.png" width="65%"> -->
 
 <a name="install"></a>
 
 ### Install
 
-```shell
-# npm
-npm install prettier-cli-watcher --save-dev
+Locally per project:
 
-# yarn
-yarn add prettier-cli-watcher --dev
+```sh
+$ npm install prettier-cli-watcher --save-dev
+# or
+$ yarn add prettier-cli-watcher --dev
+```
+
+Or globally:
+
+```sh
+$ sudo npm install -g prettier-cli-watcher
+# or
+$ yarn global add prettier-cli-watcher
 ```
 
 <a name="how-to-use"></a>
 
 ### How To Use
 
-<a name="how-to-use-non-windows"></a>
+```sh
+$ prettier-cli-watcher
+```
 
-#### Ubuntu/macOS
+Or use a `package.json` script:
 
-```json5
-// Add following script to your package.json scripts. Make sure to provide the
-// actual path to your prettier config file.
+```json
 ...
 "scripts": {
-  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json'"
+  "pretty": "prettier-cli-watcher"
 }
 ...
 ```
 
-<a name="how-to-use-windows"></a>
-
-#### Windows
-
-```json5
-// If using Windows escape (\") options where needed or don't use (') as shown:
-...
-"scripts": {
-  // Surround value with \" to escape:
-  "pretty": "prettier-cli-watcher --configpath=\"/configs/prettier.config.json\"",
-
-  // Or don't use apostrophes ('):
-  "pretty": "prettier-cli-watcher --configpath=/configs/prettier.config.json"
-}
-...
-```
-
-```shell
-# Then run with npm:
-npm run pretty
-
-# or yarn:
-yarn run pretty
-```
+Then run via `$ npm run pretty` or `$ yarn run pretty`.
 
 <a name="options"></a>
 
 ### Options
 
-Available parameters (_supplied via script command - see examples_):
+- `--dir`: The absolute path of directory to watch (default: `process.cwd()`).
+- `--config`: The project's prettier config is automatically [located](#configfiles) and used via [cosmiconfig](https://github.com/davidtheclark/cosmiconfig).
+  - Or provide the file's absolute path or relative path to `--dir`.
+- `--ignore`: Like the prettier config, the project's [`.prettierignore`](https://prettier.io/docs/en/ignore.html#ignoring-files) file is also located and used.
+  - Or provide the file's absolute path or relative path to `--dir`.
+  - **Note:** By default the entire `--dir` directory is watched. Make sure to use a [`.prettierignore`](https://prettier.io/docs/en/ignore.html#ignoring-files) file to ignore paths like `node_modules/`, `.git/`, and `dist/`, for example.
+- `--notify`: Enable OS notifications when prettier errors.
+- `--quiet`: Disable output.
+- `--setup`: List setup details.
+- `--dry`: Run prettier without saving changes (for ignore test runs).
+- `--version`: List prettier-cli-watcher version.
+<!-- - `--dtime`: Deflection time in milliseconds (default: `500`). -->
 
-- `--dir="."`
-  - The directory to watch.
-  - By default watches entire project for file changes.
-- `--configpath="path/to/prettier.config.json"` (`required`)
-  - The path to your prettier config file.
-- `--ignoredirs="node_modules|bower_components|.git|dist"`
-  - The folders to ignore file changes from.
-  - Folders shown above are the default ignored folders.
-  - Pass in custom list to override defaults.
-- `--extensions="js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql"`
-  - The file extensions to watch out for. _Must also be allowed by prettier_.
-  - Extensions shown above are the default allowed extensions.
-  - Pass in custom list to override defaults.
-- `--nonotify`
-  - Provide to disable OS notifications.
-- `--nolog`
-  - Provide to disable command line output.
-- `--watcher="chokidar|hound"`
-  - The file watcher to use.
-  - By default uses [`chokidar`](https://github.com/paulmillr/chokidar) but can also use [`hound`](https://github.com/gforceg/node-hound).
-- `--dtime=500` (_deflect time_)
-  - The amount of time, in milliseconds, to deflect and ignore rapid file modifications.
-    - A larger time allows for more rapid file changes to be caught and ignored.
-  - By default `--dtime=500` is used (500 milliseconds).
-    - `--dtime=0` disables deflection check logic all together.
+<!-- - `--watcher`: File watcher to use (default: [`chokidar`](https://github.com/paulmillr/chokidar), or [`hound`](https://github.com/gforceg/node-hound)). -->
 
-<a name="examples"></a>
+<a name="configfiles"></a>
 
-### Examples
+### Configuration Files
 
-```json5
-...
-"scripts": {
-  // Default setup...
-  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='.' --ignoredirs='node_modules|bower_components|.git|dist' --extensions='js|ts|jsx|json|css|scss|sass|less|html|vue|md|yaml|graphql' --watcher='chokidar' --dtime='500'",
-  // ...is the same as:
-  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json'",
+<details><summary>Expand section</summary>
 
-  // Example 1:
-  // Disable OS notifications while keeping --dir, --ignoredirs, and --extensions defaults.
-  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --nonotify",
+<br>
 
-  // Example 2:
-  // Only watch for ./src file changes made to .js files. Notifications and logging is left on.
-  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --dir='./src' --extensions='js'",
+[cosmiconfig](https://github.com/davidtheclark/cosmiconfig) is used to locate the project's prettier configuration file if one is not explicitly provided. Going from top to bottom, the following places are searched until a prettier configuration file is found. If one is not found the default prettier settings are used.
 
-  // Example 3:
-  // Use all defaults but change file watcher to hound.
-  "pretty": "prettier-cli-watcher --configpath='path/to/prettier.config.json' --watcher='hound'"
-}
-...
+```
+[
+  'package.json',
+  '.prettierrc',
+  'configs/.prettierrc',
+  '.prettierrc.json',
+  'configs/.prettierrc.json',
+  '.prettierrc.yaml',
+  'configs/.prettierrc.yaml',
+  '.prettierrc.yml',
+  'configs/.prettierrc.yml',
+  '.prettierrc.js',
+  'configs/.prettierrc.js',
+  'prettier.config.js',
+  'configs/prettier.config.json',
+  'configs/prettier.config.js',
+  '.prettierrc.toml',
+  'configs/.prettierrc.toml'
+]
 ```
 
-<a name="extension-specific-configurations"></a>
+Likewise, the project's [`.prettierignore`](https://prettier.io/docs/en/ignore.html#ignoring-files) is looked for at the following locations. By default the entire `--dir` directory is watched so ensure to use a [`.prettierignore`](https://prettier.io/docs/en/ignore.html#ignoring-files) file to ignore paths like `node_modules/`, `.git/`, and `dist/`, for example.
 
-### Per-extension Configurations
-
-The following configuration will be applied to all allowed file extensions (universal configuration).
-
-```json5
-{ // prettier.config.json
-  "bracketSpacing": true,
-  "jsxBracketSameLine": false,
-  "printWidth": 80,
-  "semi": true
-  ...other settings
-}
+```
+[
+  '.prettierignore',
+  'configs/.prettierignore',
+  'configs/prettierignore'
+]
 ```
 
-Example per-extension configuration file:
-
-- `*`: The universal prettier configuration (`required`).
-- `md`: Configuration for `.md` files.
-- Other needed file extension configurations.
-
-```json5
-{ // prettier.config.json
-  "*": { // Universal configuration to apply to all allowed file extensions.
-    "bracketSpacing": true,
-    "jsxBracketSameLine": false,
-    "printWidth": 80,
-    "semi": true
-    ...other settings
-  },
-  "md": { // This configuration is only applied to .md files.
-    "bracketSpacing": true,
-    "jsxBracketSameLine": false,
-    "printWidth": 120,
-    "semi": true,
-    "singleQuote": false,
-    "tabWidth": 2,
-    "trailingComma": "none",
-    "useTabs": false
-  }
-  ...any other extension configurations...
-  "json": {
-    ...settings
-  },
-  "html": {
-    ...settings
-  }
-  ...
-}
-```
-
-When using a per-extension configuration file the used prettier configuration will get logged as shown.
-
-<img src="/src/assets/img/example-output-multi-config.png" width="65%">
+</details>
 
 <a name="os-support"></a>
 

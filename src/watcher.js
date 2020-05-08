@@ -1,41 +1,22 @@
 "use strict";
 
+const nodeignore = require("ignore");
+const { ignore } = require("./onchange.js");
+
 /**
- * Determines which file watcher to use. Defaults to chokidar if nothing was
- *     explicitly requested.
+ * Determines which file watcher to use.
  *
  * @param  {string} dir - The directory to watch.
- * @param  {string} watcher_name - Name of file watcher to use.
- * @param  {regexp} ignoredirs - RegExp object used to filter dirs/files.
- * @param  {object} system - Device platform information.
- * @return {object} - The file watcher.
+ * @param  {string} name - File watcher name.
+ * @param  {array} globs - Globs to test paths against (ignored) .
+ * @return {object} - The watcher.
  */
-module.exports = function(dir, watcher_name, ignoredirs, system) {
-	// Use chokidar by default.
-	let watcher = "chokidar";
-	// The watcher options.
-	let options = {};
-
-	if (watcher_name === "chokidar") {
-		options = {
-			persistent: true,
-			alwaysStat: true,
-			ignoreInitial: true,
-			ignored: filepath => {
-				// Ignore paths containing following folders.
-				return ignoredirs.test(filepath);
-			}
-		};
-	} else if (watcher_name === "hound") {
-		watcher = "./hound.js";
-
-		options = {
-			system,
-			// Pass dynamic RegExp.
-			ignored: ignoredirs
-		};
-	}
-
-	// Get, initialize, and return watcher.
-	return require(watcher).watch(dir, options);
+module.exports = function (dir, name, globs) {
+	const ig = nodeignore().add(globs);
+	return require(name !== "hound" ? "chokidar" : "./hound.js").watch(dir, {
+		persistent: true,
+		alwaysStat: true,
+		ignoreInitial: true,
+		ignored: (p) => ignore(p, ig)
+	});
 };

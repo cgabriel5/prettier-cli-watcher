@@ -35,11 +35,9 @@
 
 "use strict";
 
-// Needed modules.
 const fs = require("fs");
 const path = require("path");
 const util = require("util");
-const upath = require("upath");
 const events = require("events");
 
 /**
@@ -52,7 +50,7 @@ const events = require("events");
  * @param {array} options
  * @return {Hound}
  */
-exports.watch = function(src, options) {
+exports.watch = function (src, options) {
 	var watcher = new Hound(options);
 	watcher.watch(src);
 	return watcher;
@@ -68,40 +66,8 @@ function Hound(options) {
 util.inherits(Hound, events.EventEmitter);
 Hound.prototype.watchers = [];
 
-/**
- * Filter paths against the user provided ignoredirs parameter.
- *
- * @param  {string} __path - The file path to check.
- * @param  {regexp} ignoredirs_regexp - The dynamically created RegExp object
- *     created using the provided user ignoredirs.
- * @param  {object} system - Device platform information.
- * @return {boolean} - Boolean indicating whether path should be ignored.
- */
-let ignoredirs = (__path, ignoredirs_regexp, system) => {
-	// Note: Normalize path slashes for Windows.
-	if (system.is_windows) {
-		__path = upath.normalizeSafe(__path);
-	}
-
-	// Get path stats.
-	let stats = fs.statSync(__path);
-
-	// Reset and cleanup path.
-	__path = "./" + __path.replace(/^(\.\/|\/)/, "");
-
-	if (stats.isDirectory()) {
-		// Add ending slash to check against right end dynamic RegExp.
-		__path += "/";
-		return (
-			// Directory must pass both left/right dynamic RegExp checks.
-			ignoredirs_regexp.left_regexp.test(__path) &&
-			ignoredirs_regexp.test(__path) // Right check.
-		);
-	} else {
-		// File: (right check) Can't contain any ignoreddirs in path.
-		return ignoredirs_regexp.test(__path);
-	}
-};
+// Lookup table of files to ignore via --ignore flag.
+let skip = {};
 
 /**
  * Watch a file or directory tree for changes, and fire events when they happen.
@@ -112,14 +78,12 @@ let ignoredirs = (__path, ignoredirs_regexp, system) => {
  * @param {string} src
  * @return {Hound}
  */
-Hound.prototype.watch = function(src) {
+Hound.prototype.watch = function (src) {
 	var self = this;
+	const { ignored } = self.options;
 
-	// Get the dynamic ignore dirs RegExp and other options.
-	let { ignored, /*extensions, extcheck,*/ system } = self.options;
-
-	// Ignore paths containing ignore dirs.
-	if (ignoredirs(src, ignored, system)) {
+	if (skip[src] || ignored(src)) {
+		skip[src] = true;
 		return;
 	}
 
@@ -127,19 +91,14 @@ Hound.prototype.watch = function(src) {
 	var lastChange = null;
 	var watchFn = self.options.watchFn || fs.watch;
 	if (stats.isDirectory()) {
-		var files = fs.readdirSync(src);
-		for (var i = 0, len = files.length; i < len; i++) {
-			// Cache current file path.
-			let file = files[i];
-			// Create path.
-			let __path = path.join(src, file);
-			if (ignoredirs(__path, ignored, system)) {
-				continue;
-			}
-			self.watch(src + path.sep + file);
+		let paths = fs.readdirSync(src);
+		for (let i = 0, l = paths.length; i < l; i++) {
+			let p = path.join(src, paths[i]);
+			if (!ignored(p)) self.watch(p);
+			else skip[p] = true;
 		}
 	}
-	self.watchers[src] = watchFn(src, function(/*event, filename*/) {
+	self.watchers[src] = watchFn(src, function (/*event, filename*/) {
 		if (fs.existsSync(src)) {
 			stats = fs.statSync(src);
 			if (stats.isFile()) {
@@ -171,7 +130,6 @@ Hound.prototype.watch = function(src) {
 			// self.emit("delete", src);
 		}
 	});
-
 	// self.emit("watch", src);
 };
 
@@ -179,7 +137,7 @@ Hound.prototype.watch = function(src) {
  * Unwatch a file or directory tree.
  * @param {string} src
  */
-Hound.prototype.unwatch = function(src) {
+Hound.prototype.unwatch = function (src) {
 	var self = this;
 	if (self.watchers[src] !== undefined) {
 		self.watchers[src].close();
@@ -191,7 +149,7 @@ Hound.prototype.unwatch = function(src) {
 /**
  * Unwatch all currently watched files and directories in this watcher.
  */
-Hound.prototype.clear = function() {
+Hound.prototype.clear = function () {
 	var self = this;
 	for (var file in this.watchers) {
 		self.unwatch(file);
