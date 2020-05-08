@@ -41,7 +41,9 @@ let error = (msg) => {
  * @param  {string} p - The path.
  * @return {string} - The modified path.
  */
-let relativize = (p) => (p.startsWith(cwd) ? "./" + path.relative(cwd, p) : p);
+let relativize = (p) => {
+	return p.startsWith(cwd) ? "." + path.sep + path.relative(cwd, p) : p;
+};
 
 /**
  * Make path absolute.
