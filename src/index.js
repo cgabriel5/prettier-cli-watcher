@@ -11,7 +11,7 @@ const params = require("./params.js")();
 const { dir, dry, notify, log, tconfig } = params;
 const { tignore, watcher, globs, dtime } = params;
 const { child, deflect } = require("./onchange.js");
-const { sep, error, tildelize, system } = require("./utils.js");
+const { sep, error, system } = require("./utils.js");
 const lookup = { processes: {}, errors: {}, changes: {}, timeouts: {} };
 
 /**
@@ -22,6 +22,7 @@ const lookup = { processes: {}, errors: {}, changes: {}, timeouts: {} };
  * @return {undefined} - Nothing is returned.
  */
 let handler = (file, stats, deflected) => {
+	let cwd = process.cwd();
 	if (system.win) file = slash(file);
 
 	if (deflect(lookup, file, stats, deflected, 500, handler)) return;
@@ -52,6 +53,7 @@ let handler = (file, stats, deflected) => {
 
 		let msg = res.toString().trim();
 		if (err) {
+			let noparser = msg.includes("No parser could be inferred");
 			let lineinfo = (msg.match(/(?! )\((\d+:\d+)\)$/m) || [""])[0];
 			let time = Date.now();
 
@@ -66,12 +68,20 @@ let handler = (file, stats, deflected) => {
 				}
 			}
 
+			// Skip sequential no parser errors.
+			if (noparser) {
+				if (last_error) return;
+				let file = msg.split(": ", 2)[1];
+				let header = `[${chalk.cyan("ignored")}]`;
+				msg = `${header} No parser inferred: ${file}`;
+			}
+
 			lookup.errors[file] = { msg, lineinfo, time };
 
-			if (notify) {
+			if (notify && !noparser) {
 				let noptions = {
-					title: "prettier-cli-watcher",
-					message: `${tildelize(file)} format failed. ${lineinfo}`,
+					title: "Error (prettier-cli-watcher)",
+					message: `${path.relative(cwd, file)} ${lineinfo}`,
 					icon: path.join(__dirname, "/assets/img/warning.png")
 				};
 				if (system.mac) noptions.actions = "Close";
@@ -80,7 +90,7 @@ let handler = (file, stats, deflected) => {
 		} else {
 			delete lookup.errors[file];
 			let duration = (msg.match(/(?! )(\d+)(\w+)$/) || [""])[0];
-			file = path.relative(process.cwd(), file);
+			file = path.relative(cwd, file);
 			msg = `[${chalk.green("prettied")}] ${file} ${duration}`;
 		}
 
