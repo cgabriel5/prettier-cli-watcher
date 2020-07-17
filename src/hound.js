@@ -120,7 +120,8 @@ Hound.prototype.watch = function (src) {
 				for (var i = 0, len = dirFiles.length; i < len; i++) {
 					var file = src + path.sep + dirFiles[i];
 					if (self.watchers[file] === undefined) {
-						self.watch(file);
+						if (skip[src] || ignored(src)) continue;
+						else self.watch(file);
 						// self.emit("create", file, fs.statSync(file));
 					}
 				}
