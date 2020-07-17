@@ -28,7 +28,7 @@
 		"hound": "^1.0.5",
 		"ignore": "^5.1.4",
 		"minimist": "^1.2.5",
-		"node-notifier": "^7.0.0",
+		"node-notifier": "^7.0.1",
 		"parse-gitignore": "^1.0.1",
 		"slash": "^3.0.0",
 		"temp": "^0.9.1",
