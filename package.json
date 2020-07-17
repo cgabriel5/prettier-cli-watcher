@@ -20,7 +20,7 @@
 	},
 	"dependencies": {
 		"chalk": "^4.1.0",
-		"chokidar": "^3.4.0",
+		"chokidar": "^3.4.1",
 		"cosmiconfig": "^6.0.0",
 		"cross-spawn-with-kill": "^1.0.0",
 		"directory-exists": "^2.0.1",
