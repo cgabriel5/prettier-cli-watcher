@@ -19,7 +19,7 @@
 		"lint": "cross-env ESLINT_CFS_VERBOSE=true ./node_modules/eslint/bin/eslint.js -c='configs/eslint.config.js' --ignore-path='configs/eslintignore' --format='simple' '**/*.{js,jsx}'; exit 0"
 	},
 	"dependencies": {
-		"chalk": "^4.0.0",
+		"chalk": "^4.1.0",
 		"chokidar": "^3.4.0",
 		"cosmiconfig": "^6.0.0",
 		"cross-spawn-with-kill": "^1.0.0",
