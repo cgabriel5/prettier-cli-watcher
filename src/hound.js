@@ -39,6 +39,8 @@ const fs = require("fs");
 const path = require("path");
 const util = require("util");
 const events = require("events");
+const flatry = require("flatry");
+const { lstats, exists, readdir } = require("./filesystem.js");
 
 /**
  * Watch one or more files or directories for changes.
@@ -78,49 +80,52 @@ let skip = {};
  * @param {string} src
  * @return {Hound}
  */
-Hound.prototype.watch = function (src) {
+Hound.prototype.watch = async function (src) {
 	var self = this;
 	const { ignored } = self.options;
 
-	if (skip[src] || ignored(src)) {
+	if (skip[src] || (await ignored(src))) {
 		skip[src] = true;
 		return;
 	}
 
-	var stats = fs.statSync(src);
+	let [err, res] = await flatry(lstats(src));
+	if (err) return;
 	var lastChange = null;
 	var watchFn = self.options.watchFn || fs.watch;
-	if (stats.isDirectory()) {
-		let paths = fs.readdirSync(src);
+
+	if (res.is.directory) {
+		let paths = await readdir(src);
 		for (let i = 0, l = paths.length; i < l; i++) {
 			let p = path.join(src, paths[i]);
-			if (!ignored(p)) self.watch(p);
+			if (!(await ignored(p))) self.watch(p);
 			else skip[p] = true;
 		}
 	}
-	self.watchers[src] = watchFn(src, function (/*event, filename*/) {
-		if (fs.existsSync(src)) {
-			stats = fs.statSync(src);
-			if (stats.isFile()) {
-				if (lastChange === null || stats.mtime.getTime() > lastChange)
+	// async functions: [https://stackoverflow.com/a/42964310]
+	self.watchers[src] = watchFn(src, async function (/*event, filename*/) {
+		let [err, res] = await flatry(exists(src));
+		if (res) {
+			let [err, stats] = await flatry(lstats(src));
+			if (stats.is.file) {
+				if (lastChange === null || stats.mtime.getTime() > lastChange) {
 					if (stats.size) {
 						self.emit("change", src, stats);
 						// SHOULD THIS BE LEFT OUT OF THE CODE BLOCK???
 						// [THE COMMENTED OUT LINE BELOW]
 						lastChange = stats.mtime.getTime();
 					}
-				// lastChange = stats.mtime.getTime();
-			} else if (stats.isDirectory()) {
-				// Check if the dir is new
-				if (self.watchers[src] === undefined) {
-					// self.emit("create", src, stats);
 				}
+				// lastChange = stats.mtime.getTime();
+			} else if (stats.is.directory) {
+				// Check if the dir is new
+				// if (self.watchers[src] === undefined) { // self.emit("create", src, stats); }
 				// Check files to see if there are any new files
-				var dirFiles = fs.readdirSync(src);
+				let dirFiles = await readdir(src);
 				for (var i = 0, len = dirFiles.length; i < len; i++) {
 					var file = src + path.sep + dirFiles[i];
 					if (self.watchers[file] === undefined) {
-						if (skip[src] || ignored(src)) continue;
+						if (skip[src] || (await ignored(file))) continue;
 						else self.watch(file);
 						// self.emit("create", file, fs.statSync(file));
 					}

@@ -31,6 +31,23 @@ let ignore = (p, ig) => {
 	} catch {}
 	return res;
 };
+// Async version of function for hound.
+ignore.async = async (p, ig) => {
+	if (system.windows) p = upath.normalizeSafe(p);
+	let file = path.relative(process.cwd(), p);
+	if (system.windows) file = upath.normalizeSafe(file);
+	let res = false;
+
+	// Try/catch in case file was deleted.
+	try {
+		let [err, stats] = await flatry(lstats(p));
+		if (stats.is.directory && !file.endsWith("/")) file += "/";
+		let test = ig.ignores(file);
+		if (test && !ignore.lookup[file]) ignore.lookup[file] = true;
+		res = test;
+	} catch {}
+	return res;
+};
 ignore.lookup = {}; // Track ignored files.
 
 /**

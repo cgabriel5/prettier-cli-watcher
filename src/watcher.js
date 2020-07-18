@@ -12,11 +12,10 @@ const { ignore } = require("./onchange.js");
  * @return {object} - The watcher.
  */
 module.exports = function (dir, name, globs) {
+	let ishound = name === "hound";
 	const ig = nodeignore().add(globs);
-	return require(name !== "hound" ? "chokidar" : "./hound.js").watch(dir, {
-		persistent: true,
-		alwaysStat: true,
-		ignoreInitial: true,
-		ignored: (p) => ignore(p, ig)
-	});
+	let opts = { persistent: true, alwaysStat: true, ignoreInitial: true };
+	if (ishound) opts.ignored = async (p) => await ignore.async(p, ig);
+	else opts.ignored = (p) => ignore(p, ig);
+	return require(!ishound ? "chokidar" : "./hound.js").watch(dir, opts);
 };
