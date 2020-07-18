@@ -25,7 +25,7 @@ let handler = (file, stats, deflected) => {
 	let cwd = process.cwd();
 	if (system.win) file = slash(file);
 
-	if (deflect(lookup, file, stats, deflected, 500, handler)) return;
+	if (deflect(lookup, file, stats, deflected, dtime, handler)) return;
 
 	const proc = child(file, dry, tconfig, tignore);
 	if (!lookup.processes[file]) lookup.processes[file] = [];
