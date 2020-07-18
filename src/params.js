@@ -48,7 +48,7 @@ module.exports = function () {
 	let watcher = params.watcher || "chokidar";
 	if (!["chokidar", "hound"].includes(watcher)) watcher = "chokidar";
 
-	const dtime = params.deflect || 500;
+	let dtime = params.deflect || 500;
 	if (typeof dtime !== "number") dtime = 500;
 	if (dtime < 0) dtime = 0;
 
