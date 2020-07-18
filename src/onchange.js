@@ -30,7 +30,9 @@ let ignore = (p, ig) => {
 		let test = ig.ignores(file);
 		if (test && !ignore.lookup[file]) ignore.lookup[file] = true;
 		res = test;
-	} catch {}
+	} catch {
+		/*empty*/
+	}
 	return res;
 };
 // Async version of function for hound.
@@ -47,7 +49,9 @@ ignore.async = async (p, ig) => {
 		let test = ig.ignores(file);
 		if (test && !ignore.lookup[file]) ignore.lookup[file] = true;
 		res = test;
-	} catch {}
+	} catch {
+		/*empty*/
+	}
 	return res;
 };
 ignore.lookup = {}; // Track ignored files.
