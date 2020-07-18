@@ -4,8 +4,10 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const upath = require("upath");
+const flatry = require("flatry");
 const fe = require("file-exists");
 const treekill = require("tree-kill");
+const { lstats } = require("./filesystem.js");
 const { error, system } = require("./utils.js");
 const spawn = require("cross-spawn-with-kill");
 
