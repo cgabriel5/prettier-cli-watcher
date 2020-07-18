@@ -104,9 +104,9 @@ Hound.prototype.watch = async function (src) {
 	}
 	// async functions: [https://stackoverflow.com/a/42964310]
 	self.watchers[src] = watchFn(src, async function (/*event, filename*/) {
-		let [err, res] = await flatry(exists(src));
+		let [, res] = await flatry(exists(src));
 		if (res) {
-			let [err, stats] = await flatry(lstats(src));
+			let [, stats] = await flatry(lstats(src));
 			if (stats.is.file) {
 				if (lastChange === null || stats.mtime.getTime() > lastChange) {
 					if (stats.size) {

@@ -42,7 +42,7 @@ ignore.async = async (p, ig) => {
 
 	// Try/catch in case file was deleted.
 	try {
-		let [err, stats] = await flatry(lstats(p));
+		let [, stats] = await flatry(lstats(p));
 		if (stats.is.directory && !file.endsWith("/")) file += "/";
 		let test = ig.ignores(file);
 		if (test && !ignore.lookup[file]) ignore.lookup[file] = true;
