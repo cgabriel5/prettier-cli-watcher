@@ -53,6 +53,9 @@ let handler = (file, stats, deflected) => {
 
 		let msg = res.toString().trim();
 		if (err) {
+			// Ignore: "No files matching the pattern were found" errors.
+			if (msg.includes("matching the pattern were found")) return;
+
 			let noparser = msg.includes("No parser could be inferred");
 			let lineinfo = (msg.match(/(?! )\((\d+:\d+)\)$/m) || [""])[0];
 			let time = Date.now();
