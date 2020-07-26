@@ -89,54 +89,62 @@ Hound.prototype.watch = async function (src) {
 		return;
 	}
 
-	let [err, res] = await flatry(lstats(src));
-	if (err) return;
-	var lastChange = null;
-	var watchFn = self.options.watchFn || fs.watch;
+	try {
+		let [err, res] = await flatry(lstats(src));
+		if (err) return;
+		var lastChange = null;
+		var watchFn = self.options.watchFn || fs.watch;
 
-	if (res.is.directory) {
-		let paths = await readdir(src);
-		for (let i = 0, l = paths.length; i < l; i++) {
-			let p = path.join(src, paths[i]);
-			if (!(await ignored(p))) self.watch(p);
-			else skip[p] = true;
-		}
-	}
-	// async functions: [https://stackoverflow.com/a/42964310]
-	self.watchers[src] = watchFn(src, async function (/*event, filename*/) {
-		let [, res] = await flatry(exists(src));
-		if (res) {
-			let [, stats] = await flatry(lstats(src));
-			if (stats.is.file) {
-				if (lastChange === null || stats.mtime.getTime() > lastChange) {
-					if (stats.size) {
-						self.emit("change", src, stats);
-						// SHOULD THIS BE LEFT OUT OF THE CODE BLOCK???
-						// [THE COMMENTED OUT LINE BELOW]
-						lastChange = stats.mtime.getTime();
-					}
-				}
-				// lastChange = stats.mtime.getTime();
-			} else if (stats.is.directory) {
-				// Check if the dir is new
-				// if (self.watchers[src] === undefined) { // self.emit("create", src, stats); }
-				// Check files to see if there are any new files
-				let dirFiles = await readdir(src);
-				for (var i = 0, len = dirFiles.length; i < len; i++) {
-					var file = src + path.sep + dirFiles[i];
-					if (self.watchers[file] === undefined) {
-						if (skip[src] || (await ignored(file))) continue;
-						else self.watch(file);
-						// self.emit("create", file, fs.statSync(file));
-					}
-				}
+		if (res.is.directory) {
+			let [err, paths = []] = await flatry(readdir(src));
+			for (let i = 0, l = paths.length; i < l; i++) {
+				let p = path.join(src, paths[i]);
+				if (!(await ignored(p))) self.watch(p);
+				else skip[p] = true;
 			}
-		} else {
-			self.unwatch(src);
-			// self.emit("delete", src);
 		}
-	});
-	// self.emit("watch", src);
+		// async functions: [https://stackoverflow.com/a/42964310]
+		self.watchers[src] = watchFn(src, async function (/*event, filename*/) {
+			let [, res] = await flatry(exists(src));
+			if (res) {
+				let [, stats] = await flatry(lstats(src));
+				if (!stats || !stats.is) return;
+				if (stats.is.file) {
+					if (
+						lastChange === null ||
+						stats.mtime.getTime() > lastChange
+					) {
+						if (stats.size) {
+							self.emit("change", src, stats);
+							// SHOULD THIS BE LEFT OUT OF THE CODE BLOCK???
+							// [THE COMMENTED OUT LINE BELOW]
+							lastChange = stats.mtime.getTime();
+						}
+					}
+					// lastChange = stats.mtime.getTime();
+				} else if (stats.is.directory) {
+					// Check if the dir is new
+					// if (self.watchers[src] === undefined) { // self.emit("create", src, stats); }
+					// Check files to see if there are any new files
+					let [err, dirFiles = []] = await flatry(readdir(src));
+					for (var i = 0, len = dirFiles.length; i < len; i++) {
+						var file = src + path.sep + dirFiles[i];
+						if (self.watchers[file] === undefined) {
+							if (skip[src] || (await ignored(file))) continue;
+							else self.watch(file);
+							// self.emit("create", file, fs.statSync(file));
+						}
+					}
+				}
+			} else {
+				self.unwatch(src);
+				// self.emit("delete", src);
+			}
+		});
+		// self.emit("watch", src);
+	} catch (e) {
+		if (e.path) self.unwatch(e.path);
+	}
 };
 
 /**
