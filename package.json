@@ -20,8 +20,8 @@
 	},
 	"dependencies": {
 		"chalk": "^4.1.0",
-		"chokidar": "^3.4.1",
-		"cosmiconfig": "^6.0.0",
+		"chokidar": "^3.5.1",
+		"cosmiconfig": "^7.0.0",
 		"cross-spawn-with-kill": "^1.0.0",
 		"directory-exists": "^2.0.1",
 		"file-exists": "^5.0.1",
@@ -29,13 +29,13 @@
 		"hound": "^1.0.5",
 		"ignore": "^5.1.8",
 		"minimist": "^1.2.5",
-		"node-notifier": "^7.0.1",
+		"node-notifier": "^9.0.1",
 		"parse-gitignore": "^1.0.1",
 		"slash": "^3.0.0",
-		"temp": "^0.9.1",
+		"temp": "^0.9.4",
 		"toml": "^3.0.0",
 		"tree-kill": "^1.2.2",
-		"upath": "^1.2.0"
+		"upath": "^2.0.1"
 	},
 	"author": "Carlos Gabriel",
 	"license": "MIT",
@@ -49,10 +49,10 @@
 		"npm": ">=6.4.1"
 	},
 	"devDependencies": {
-		"cross-env": "^7.0.2",
-		"eslint": "^7.4.0",
+		"cross-env": "^7.0.3",
+		"eslint": "^7.22.0",
 		"eslint-config-simple": "*",
 		"eslint-formatter-simple": "*",
-		"prettier": "^2.0.5"
+		"prettier": "^2.2.1"
 	}
 }
