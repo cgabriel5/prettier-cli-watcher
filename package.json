@@ -19,16 +19,16 @@
 		"lint": "cross-env ESLINT_CFS_VERBOSE=true ./node_modules/eslint/bin/eslint.js -c='configs/eslint.config.js' --ignore-path='configs/eslintignore' --format='simple' '**/*.{js,jsx}'; exit 0"
 	},
 	"dependencies": {
-		"chalk": "^4.1.0",
-		"chokidar": "^3.5.1",
-		"cosmiconfig": "^7.0.0",
+		"chalk": "4.1.2",
+		"chokidar": "3.5.3",
+		"cosmiconfig": "7.1.0",
 		"cross-spawn-with-kill": "^1.0.0",
 		"directory-exists": "^2.0.1",
 		"file-exists": "^5.0.1",
 		"flatry": "^1.0.12",
 		"hound": "^1.0.5",
-		"ignore": "^5.1.8",
-		"minimist": "^1.2.5",
+		"ignore": "5.2.4",
+		"minimist": "1.2.7",
 		"node-notifier": "^9.0.1",
 		"parse-gitignore": "^1.0.1",
 		"slash": "^3.0.0",
@@ -50,9 +50,9 @@
 	},
 	"devDependencies": {
 		"cross-env": "^7.0.3",
-		"eslint": "^7.22.0",
+		"eslint": "7.32.0",
 		"eslint-config-simple": "*",
 		"eslint-formatter-simple": "*",
-		"prettier": "^2.2.1"
+		"prettier": "^2.8.3"
 	}
 }
